@@ -7,25 +7,41 @@ namespace MarcosPereira.UnityUtilities {
         private static CancellationTokenSource cancellationTokenSource =
             new CancellationTokenSource();
 
-        public static async Task<TResult> Run<TResult>(Func<Task<TResult>> f) {
+        public static async Task<TResult> Run<TResult>(Func<CancellationToken, Task<TResult>> f) {
             // We have to store a token and cannot simply query the source
             // after awaiting, as the token source is replaced with a new one
             // upon exiting play mode.
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
 
-            // Pass token to Task.Run() as well, otherwise upon cancelling its
-            // status will change to faulted instead of cancelled.
-            // https://stackoverflow.com/a/72145763/2037431
-            TResult result = await Task.Run(f, token);
+            TResult result;
+
+            try {
+                // Pass token to Task.Run() as well, otherwise upon cancelling its
+                // status will change to faulted instead of cancelled.
+                // https://stackoverflow.com/a/72145763/2037431
+                result = await Task.Run(() => f(token), token);
+            } catch (Exception e) {
+                // Unawaited tasks have their exceptions swallowed.
+                // We force exceptions to be logged to the console.
+                // If a failed task is awaited, the exception will be logged
+                // twice, but that's ok.
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
 
             SafeTask.ThrowIfCancelled(token);
-
             return result;
         }
 
-        public static async Task Run(Func<Task> f) {
+        public static async Task Run(Func<CancellationToken, Task> f) {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
-            await Task.Run(f, token);
+            try {
+                await Task.Run(() => f(token), token);
+            } catch (Exception e) {
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
+
             SafeTask.ThrowIfCancelled(token);
         }
 
