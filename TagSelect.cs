@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     // Allow selecting a tag through the inspector by declaring a string field with
     // [SerializeField] and [TagSelect] attributes.
     // Based on http://www.brechtos.com/tagselectorattribute/

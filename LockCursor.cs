@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     public class LockCursor : MonoBehaviour {
         public void Start() {
             // Lock and hide cursor

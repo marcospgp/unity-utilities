@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     // Allow selecting a layer through the inspector using a [LayerSelect]
     // attribute.
     // Based on http://answers.unity.com/comments/1777780/view.html

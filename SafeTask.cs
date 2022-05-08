@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     public static class SafeTask {
         private static CancellationTokenSource cancellationTokenSource =
             new CancellationTokenSource();

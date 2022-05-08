@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     // Usage is [ReadOnlyField]. Not [ReadOnly] due to conflict with
     // `Unity.Collections.ReadOnlyAttribute`.
     public class ReadOnlyFieldAttribute : PropertyAttribute {

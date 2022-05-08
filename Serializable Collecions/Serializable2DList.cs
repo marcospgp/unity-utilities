@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     public class Serializable2DList<T> : ScriptableObject {
         [SerializeField]
         private List<SubList<T>> items = new List<SubList<T>>();

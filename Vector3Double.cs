@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     public readonly struct Vector3Double {
         public readonly double x;
         public readonly double y;

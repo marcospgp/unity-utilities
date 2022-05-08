@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     public static class Extensions {
         // Strict versions of GetComponent*() methods that error when the component
         // is not found.

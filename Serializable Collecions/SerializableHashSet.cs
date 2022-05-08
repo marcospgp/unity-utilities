@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MarcosPereira.Utility {
+namespace MarcosPereira.UnityUtilities {
     // This class is serializable but not a ScriptableObject, as Unity does not
     // support generic ScriptableObjects.
     // Keep in mind that custom classes have poorer serialization support.
