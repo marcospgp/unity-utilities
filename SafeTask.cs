@@ -45,6 +45,18 @@ namespace MarcosPereira.UnityUtilities {
             SafeTask.ThrowIfCancelled(token);
         }
 
+        public static async Task Run(Action<CancellationToken> f) {
+            CancellationToken token = SafeTask.cancellationTokenSource.Token;
+            try {
+                await Task.Run(() => f(token), token);
+            } catch (Exception e) {
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
+
+            SafeTask.ThrowIfCancelled(token);
+        }
+
         private static void ThrowIfCancelled(CancellationToken token) {
             if (token.IsCancellationRequested) {
                 throw new OperationCanceledException(
