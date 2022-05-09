@@ -33,6 +33,22 @@ namespace MarcosPereira.UnityUtilities {
             return result;
         }
 
+        public static async Task<TResult> Run<TResult>(Func<CancellationToken, TResult> f) {
+            CancellationToken token = SafeTask.cancellationTokenSource.Token;
+
+            TResult result;
+
+            try {
+                result = await Task.Run(() => f(token), token);
+            } catch (Exception e) {
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
+
+            SafeTask.ThrowIfCancelled(token);
+            return result;
+        }
+
         public static async Task Run(Func<CancellationToken, Task> f) {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
             try {
