@@ -20,10 +20,24 @@ namespace MarcosPereira.UnityUtilities {
             // upon exiting play mode.
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
 
-            // Pass token to Task.Run() as well, otherwise upon cancelling its
-            // status will change to faulted instead of cancelled.
-            // https://stackoverflow.com/a/72145763/2037431
-            TResult result = await Task.Run(() => f(), token);
+            TResult result;
+
+            try {
+                // Pass token to Task.Run() as well, otherwise upon cancelling its
+                // status will change to faulted instead of cancelled.
+                // https://stackoverflow.com/a/72145763/2037431
+                result = await Task.Run(() => f(), token);
+            } catch (Exception e) {
+                // We log unobserved exceptions with an UnobservedTaskException
+                // handler, but those are only handled when garbage collection
+                // happens.
+                // We thus force exceptions to be logged here - at least for
+                // SafeTasks.
+                // If a failing SafeTask is awaited, the exception will be
+                // logged twice, but that's ok.
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
 
             SafeTask.ThrowIfCancelled(token);
             return result;
@@ -31,20 +45,37 @@ namespace MarcosPereira.UnityUtilities {
 
         public static async Task<TResult> Run<TResult>(Func<TResult> f) {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
-            TResult result = await Task.Run(() => f(), token);
+
+            TResult result;
+
+            try {
+                result = await Task.Run(() => f(), token);
+            } catch (Exception e) {
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
+
             SafeTask.ThrowIfCancelled(token);
             return result;
         }
 
         public static async Task Run(Func<Task> f) {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
+
             await Task.Run(() => f(), token);
+
             SafeTask.ThrowIfCancelled(token);
         }
 
         public static async Task Run(Action f) {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
-            await Task.Run(() => f(), token);
+            try {
+                await Task.Run(() => f(), token);
+            } catch (Exception e) {
+                UnityEngine.Debug.LogException(e);
+                throw;
+            }
+
             SafeTask.ThrowIfCancelled(token);
         }
 
@@ -64,10 +95,16 @@ namespace MarcosPereira.UnityUtilities {
             // This happens when:
             //  * An unawaited Task fails;
             //  * A Task chained with `.ContinueWith()` fails and exceptions are
-            //    not explicitly looked for in the callback.
+            //    not explicitly handled in the callback.
             //
-            // Note that this event handler works for Tasks as well, not just
-            // SafeTasks.
+            // Note that this event handler works for both Tasks and SafeTasks.
+            //
+            // Also note that this handler may not fire right away. It seems to
+            // only run when garbage collection happens (for example, in the
+            // editor after script reloading).
+            // Experimentally, calling `System.GC.Colect()` after the exception
+            //  (using a small `Task.Delay()` to ensure it runs after the
+            // exception is thrown) caused exceptions to be logged right away.
             TaskScheduler.UnobservedTaskException +=
                 (_, e) => UnityEngine.Debug.LogException(e.Exception);
 
