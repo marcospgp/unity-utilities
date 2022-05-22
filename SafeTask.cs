@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace MarcosPereira.UnityUtilities {
     /// <summary>
     /// A replacement for `Task.Run()` that cancels tasks when exiting play
-    /// mode, which doesn't happen automatically.
+    /// mode, which Unity doesn't do by default.
     /// Also registers a UnobservedTaskException handler to prevent exceptions
     /// from being swallowed in both Tasks and SafeTasks, when these are
     /// unawaited or chained with `.ContinueWith()`.
@@ -14,69 +14,50 @@ namespace MarcosPereira.UnityUtilities {
         private static CancellationTokenSource cancellationTokenSource =
             new CancellationTokenSource();
 
-        public static async Task<TResult> Run<TResult>(Func<Task<TResult>> f) {
+        public static Task<TResult> Run<TResult>(Func<Task<TResult>> f) =>
+            SafeTask.Run<TResult>((object) f);
+
+        public static Task<TResult> Run<TResult>(Func<TResult> f) =>
+            SafeTask.Run<TResult>((object) f);
+
+        public static Task Run(Func<Task> f) => SafeTask.Run<object>((object) f);
+
+        public static Task Run(Action f) => SafeTask.Run<object>((object) f);
+
+        private static async Task<TResult> Run<TResult>(object f) {
             // We have to store a token and cannot simply query the source
             // after awaiting, as the token source is replaced with a new one
             // upon exiting play mode.
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
-
-            TResult result;
+            TResult result = default;
 
             try {
-                // Pass token to Task.Run() as well, otherwise upon cancelling its
-                // status will change to faulted instead of cancelled.
+                // Pass token to Task.Run() as well, otherwise upon cancelling
+                // its status will change to faulted instead of cancelled.
                 // https://stackoverflow.com/a/72145763/2037431
-                result = await Task.Run(() => f(), token);
+
+                if (f is Func<Task<TResult>> g) {
+                    result = await Task.Run(() => g(), token);
+                } else if (f is Func<TResult> h) {
+                    result = await Task.Run(() => h(), token);
+                } else if (f is Func<Task> i) {
+                    await Task.Run(() => i(), token);
+                } else if (f is Action j) {
+                    await Task.Run(() => j(), token);
+                }
             } catch (Exception e) {
-                // We log unobserved exceptions with an UnobservedTaskException
-                // handler, but those are only handled when garbage collection
-                // happens.
-                // We thus force exceptions to be logged here - at least for
-                // SafeTasks.
-                // If a failing SafeTask is awaited, the exception will be
-                // logged twice, but that's ok.
+                // We log unobserved exceptions with an UnobservedTaskException handler, but those
+                // are only handled when garbage collection happens.
+                // We thus force exceptions to be logged here - at least for SafeTasks.
+                // If a failing SafeTask is awaited, the exception will be logged twice, but that's
+                // ok.
                 UnityEngine.Debug.LogException(e);
                 throw;
             }
 
             SafeTask.ThrowIfCancelled(token);
+
             return result;
-        }
-
-        public static async Task<TResult> Run<TResult>(Func<TResult> f) {
-            CancellationToken token = SafeTask.cancellationTokenSource.Token;
-
-            TResult result;
-
-            try {
-                result = await Task.Run(() => f(), token);
-            } catch (Exception e) {
-                UnityEngine.Debug.LogException(e);
-                throw;
-            }
-
-            SafeTask.ThrowIfCancelled(token);
-            return result;
-        }
-
-        public static async Task Run(Func<Task> f) {
-            CancellationToken token = SafeTask.cancellationTokenSource.Token;
-
-            await Task.Run(() => f(), token);
-
-            SafeTask.ThrowIfCancelled(token);
-        }
-
-        public static async Task Run(Action f) {
-            CancellationToken token = SafeTask.cancellationTokenSource.Token;
-            try {
-                await Task.Run(() => f(), token);
-            } catch (Exception e) {
-                UnityEngine.Debug.LogException(e);
-                throw;
-            }
-
-            SafeTask.ThrowIfCancelled(token);
         }
 
         private static void ThrowIfCancelled(CancellationToken token) {
