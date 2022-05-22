@@ -76,7 +76,7 @@ namespace MarcosPereira.UnityUtilities {
             // This happens when:
             //  * An unawaited Task fails;
             //  * A Task chained with `.ContinueWith()` fails and exceptions are
-            //    not explicitly handled in the callback.
+            //    not explicitly handled in the function passed to it.
             //
             // Note that this event handler works for both Tasks and SafeTasks.
             //
