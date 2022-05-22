@@ -28,13 +28,11 @@ namespace MarcosPereira.UnityUtilities {
                 // https://stackoverflow.com/a/72145763/2037431
                 result = await Task.Run(() => f(), token);
             } catch (Exception e) {
-                // We log unobserved exceptions with an UnobservedTaskException
-                // handler, but those are only handled when garbage collection
-                // happens.
-                // We thus force exceptions to be logged here - at least for
-                // SafeTasks.
-                // If a failing SafeTask is awaited, the exception will be
-                // logged twice, but that's ok.
+                // We log unobserved exceptions with an UnobservedTaskException handler, but those
+                // are only handled when garbage collection happens.
+                // We thus force exceptions to be logged here - at least for SafeTasks.
+                // If a failing SafeTask is awaited, the exception will be logged twice, but that's
+                // ok.
                 UnityEngine.Debug.LogException(e);
                 throw;
             }
@@ -95,7 +93,7 @@ namespace MarcosPereira.UnityUtilities {
             // This happens when:
             //  * An unawaited Task fails;
             //  * A Task chained with `.ContinueWith()` fails and exceptions are
-            //    not explicitly handled in the callback.
+            //    not explicitly handled in the function passed to it.
             //
             // Note that this event handler works for both Tasks and SafeTasks.
             //
