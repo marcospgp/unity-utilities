@@ -83,7 +83,7 @@ namespace MarcosPereira.UnityUtilities {
             // Also note that this handler may not fire right away. It seems to
             // only run when garbage collection happens (for example, in the
             // editor after script reloading).
-            // Experimentally, calling `System.GC.Colect()` after the exception
+            // Experimentally, calling `System.GC.Collect()` after the exception
             //  (using a small `Task.Delay()` to ensure it runs after the
             // exception is thrown) caused exceptions to be logged right away.
             TaskScheduler.UnobservedTaskException +=
@@ -95,12 +95,10 @@ namespace MarcosPereira.UnityUtilities {
             // This only works in SafeTasks, so `Task.Run()` should never be
             // used directly.
             UnityEditor.EditorApplication.playModeStateChanged +=
-                (change) => {
-                    if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode) {
-                        SafeTask.cancellationTokenSource.Cancel();
-                        SafeTask.cancellationTokenSource.Dispose();
-                        SafeTask.cancellationTokenSource = new CancellationTokenSource();
-                    }
+                _ => {
+                    SafeTask.cancellationTokenSource.Cancel();
+                    SafeTask.cancellationTokenSource.Dispose();
+                    SafeTask.cancellationTokenSource = new CancellationTokenSource();
                 };
         }
 #endif
