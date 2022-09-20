@@ -2,25 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-// Known Issues
-//
-// - Exiting play mode by interrupting the editor with a code change causes
-//   MonoBehaviours to be destroyed while pending asynchronous tasks are still
-//   executed. This means a task may return to its containing gameobject after
-//   an await only to see it destroyed.
-//   Interestingly, if the code change does not introduce an exception, any
-//   exceptions resulting from accessing the destroyed object will be swallowed
-//   (not logged to the console), and if doing something such as creating a
-//   gameobject, it will be added to the scene in edit mode and will have to be
-//   removed manually.
-//   It is not clear whether this issue is related to `Task.Run()` only or any
-//   task, even if running on the main thread.
-//   To avoid any issues, make sure to check that your MonoBehaviour has not
-//   been destroyed after awaiting a task, especially if that task goes into a
-//   separate thread at some point (such as by starting a SafeTask).
-//   See more at:
-//   https://forum.unity.com/threads/stopping-play-mode-by-pressing-play-button-or-by-changing-a-script-have-different-outcomes.1337852/#post-8449817
-
 namespace MarcosPereira.UnityUtilities {
     /// <summary>
     /// A replacement for `Task.Run()` that cancels tasks when exiting play
@@ -44,9 +25,17 @@ namespace MarcosPereira.UnityUtilities {
         public static Task Run(Action f) => SafeTask.Run<object>((object) f);
 
         private static async Task<TResult> Run<TResult>(object f) {
+            // Exiting play mode by interrupting the editor with a code change
+            // does not properly terminate pending tasks running on a separate thread.
+            // To work around this, we only successfully return from SafeTasks if
+            // `Application.isPlaying` is the same as when execution started.
+            // See more at:
+            // https://forum.unity.com/threads/stopping-play-mode-by-pressing-play-button-or-by-changing-a-script-have-different-outcomes.1337852/#post-8449817
+            bool isPlayMode = UnityEngine.Application.isPlaying;
+
             // We have to store a token and cannot simply query the source
-            // after awaiting, as the token source is replaced with a new one
-            // upon exiting play mode.
+            // itself after awaiting, as the token source is replaced with a new
+            // one upon exiting play mode.
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
             TResult result = default;
 
@@ -65,8 +54,8 @@ namespace MarcosPereira.UnityUtilities {
                     await Task.Run(() => j(), token);
                 }
             } catch (Exception e) {
-                // We log unobserved exceptions with an UnobservedTaskException handler, but those
-                // are only handled when garbage collection happens.
+                // We log unobserved exceptions with an UnobservedTaskException
+                // handler, but those are only handled when garbage collection happens.
                 // We thus force exceptions to be logged here - at least for SafeTasks.
                 // If a failing SafeTask is awaited, the exception will be logged twice, but that's
                 // ok.
@@ -74,18 +63,17 @@ namespace MarcosPereira.UnityUtilities {
                 throw;
             }
 
-            SafeTask.ThrowIfCancelled(token);
-
-            return result;
-        }
-
-        private static void ThrowIfCancelled(CancellationToken token) {
-            if (token.IsCancellationRequested) {
+            if (
+                token.IsCancellationRequested ||
+                UnityEngine.Application.isPlaying != isPlayMode
+            ) {
                 throw new OperationCanceledException(
-                    "An asynchronous task has been cancelled due to exiting play mode.",
+                    "An asynchronous task has been cancelled due to entering or exiting play mode.",
                     token
                 );
             }
+
+            return result;
         }
 
 #if UNITY_EDITOR
