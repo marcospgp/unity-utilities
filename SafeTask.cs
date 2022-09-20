@@ -9,9 +9,15 @@ using System.Threading.Tasks;
 //   executed. This means a task may return to its containing gameobject after
 //   an await only to see it destroyed.
 //   Interestingly, if the code change does not introduce an exception, any
-//   exceptions resulting from accessing the destroyed object will be swallowed,
-//   and if doing something such as creating a gameobject, it will be added to
-//   the scene in edit mode and will have to be removed manually.
+//   exceptions resulting from accessing the destroyed object will be swallowed
+//   (not logged to the console), and if doing something such as creating a
+//   gameobject, it will be added to the scene in edit mode and will have to be
+//   removed manually.
+//   It is not clear whether this issue is related to `Task.Run()` only or any
+//   task, even if running on the main thread.
+//   To avoid any issues, make sure to check that your MonoBehaviour has not
+//   been destroyed after awaiting a task, especially if that task goes into a
+//   separate thread at some point (such as by starting a SafeTask).
 //   See more at:
 //   https://forum.unity.com/threads/stopping-play-mode-by-pressing-play-button-or-by-changing-a-script-have-different-outcomes.1337852/#post-8449817
 
