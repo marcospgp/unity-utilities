@@ -2,6 +2,19 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+// Known Issues
+//
+// - Exiting play mode by interrupting the editor with a code change causes
+//   MonoBehaviours to be destroyed while pending asynchronous tasks are still
+//   executed. This means a task may return to its containing gameobject after
+//   an await only to see it destroyed.
+//   Interestingly, if the code change does not introduce an exception, any
+//   exceptions resulting from accessing the destroyed object will be swallowed,
+//   and if doing something such as creating a gameobject, it will be added to
+//   the scene in edit mode and will have to be removed manually.
+//   See more at:
+//   https://forum.unity.com/threads/stopping-play-mode-by-pressing-play-button-or-by-changing-a-script-have-different-outcomes.1337852/#post-8449817
+
 namespace MarcosPereira.UnityUtilities {
     /// <summary>
     /// A replacement for `Task.Run()` that cancels tasks when exiting play
@@ -95,10 +108,15 @@ namespace MarcosPereira.UnityUtilities {
             // This only works in SafeTasks, so `Task.Run()` should never be
             // used directly.
             UnityEditor.EditorApplication.playModeStateChanged +=
-                _ => {
-                    SafeTask.cancellationTokenSource.Cancel();
-                    SafeTask.cancellationTokenSource.Dispose();
-                    SafeTask.cancellationTokenSource = new CancellationTokenSource();
+                (change) => {
+                    if (
+                        change == UnityEditor.PlayModeStateChange.ExitingPlayMode ||
+                        change == UnityEditor.PlayModeStateChange.ExitingEditMode
+                    ) {
+                        SafeTask.cancellationTokenSource.Cancel();
+                        SafeTask.cancellationTokenSource.Dispose();
+                        SafeTask.cancellationTokenSource = new CancellationTokenSource();
+                    }
                 };
         }
 #endif
