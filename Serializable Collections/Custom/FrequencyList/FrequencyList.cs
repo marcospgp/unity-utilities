@@ -4,12 +4,7 @@ using UnityEngine;
 namespace MarcosPereira.UnityUtilities {
     // Inherit from ScriptableObject for proper serialization.
     public class FrequencyList : ScriptableObject {
-        public List<Item> items;
-
-        [System.Serializable]
-        public class Item {
-            public Object obj;
-            public float frequency;
-        }
+        public string yo = "yo ma";
+        public List<float> items;
     }
 }

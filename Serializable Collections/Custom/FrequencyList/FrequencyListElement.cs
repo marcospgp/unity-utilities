@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace MarcosPereira.UnityUtilities {
@@ -9,10 +11,9 @@ namespace MarcosPereira.UnityUtilities {
         /// </param>
         public FrequencyListElement(SerializedProperty p) {
             this.fixedItemHeight = 16f;
-            this.makeItem = () => new Item();
-            // this.bindItem = (element, i) => {
-            //     this.itemsSource
-            // };
+            this.makeItem = () => new Label("test item");
+            this.bindItem = (element, i) => {
+            };
 
             this.headerTitle = p.displayName;
             this.horizontalScrollingEnabled = false;
@@ -24,7 +25,14 @@ namespace MarcosPereira.UnityUtilities {
             this.showBoundCollectionSize = true;
             this.showFoldoutHeader = true;
 
-            this.BindProperty(p);
+            // this.bindingPath = "items";
+            // this.Bind(p.serializedObject);
+
+            this.BindProperty(new SerializedObject(p.objectReferenceValue).FindProperty("items"));
+
+            this.itemsSource = new List<float>() { 1f, 2f, 3f };
+
+            UnityEngine.Debug.Log(this.itemsSource);
         }
 
         private class Item : VisualElement {
@@ -44,13 +52,13 @@ namespace MarcosPereira.UnityUtilities {
                 this.objectField.labelElement.style.display = DisplayStyle.None;
                 this.objectField.style.alignItems = Align.Center;
                 this.objectField.style.width = new Length(48f, LengthUnit.Percent);
-                this.slider.bindingPath = nameof(FrequencyList.Item.obj);
+                this.slider.bindingPath = "Item1";
 
                 this.slider.labelElement.style.display = DisplayStyle.None;
                 this.slider.style.width = new Length(48f, LengthUnit.Percent);
                 this.slider.style.alignSelf = Align.Center;
                 this.slider.showInputField = true;
-                this.slider.bindingPath = nameof(FrequencyList.Item.frequency);
+                this.slider.bindingPath = "Item2";
             }
         }
     }
