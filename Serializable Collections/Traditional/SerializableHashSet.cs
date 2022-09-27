@@ -15,6 +15,8 @@ namespace MarcosPereira.UnityUtilities {
         [SerializeField]
         private List<T> serializableItems;
 
+        public int Count => this.hashSet.Count;
+
         void ISerializationCallbackReceiver.OnBeforeSerialize() {
             this.serializableItems = new List<T>(this.hashSet);
         }
@@ -33,8 +35,6 @@ namespace MarcosPereira.UnityUtilities {
 
         IEnumerator IEnumerable.GetEnumerator() =>
             this.hashSet.GetEnumerator();
-
-        public int count => this.hashSet.Count;
 
         public bool Add(T item) => this.hashSet.Add(item);
 

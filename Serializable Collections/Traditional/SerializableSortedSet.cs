@@ -15,6 +15,18 @@ namespace MarcosPereira.UnityUtilities {
         [SerializeField]
         private List<T> serializableItems;
 
+        public SerializableSortedSet() {
+            this.sortedSet = new SortedSet<T>();
+        }
+
+        public SerializableSortedSet(IComparer<T> comparer) {
+            this.sortedSet = new SortedSet<T>(comparer);
+        }
+
+        public int Count => this.sortedSet.Count;
+        public T Min => this.sortedSet.Min;
+        public T Max => this.sortedSet.Max;
+
         void ISerializationCallbackReceiver.OnBeforeSerialize() {
             this.serializableItems = new List<T>(this.sortedSet);
         }
@@ -33,18 +45,6 @@ namespace MarcosPereira.UnityUtilities {
 
         IEnumerator IEnumerable.GetEnumerator() =>
             this.sortedSet.GetEnumerator();
-
-        public SerializableSortedSet() {
-            this.sortedSet = new SortedSet<T>();
-        }
-
-        public SerializableSortedSet(IComparer<T> comparer) {
-            this.sortedSet = new SortedSet<T>(comparer);
-        }
-
-        public int count => this.sortedSet.Count;
-        public T min => this.sortedSet.Min;
-        public T max => this.sortedSet.Max;
 
         public bool Add(T item) => this.sortedSet.Add(item);
 
