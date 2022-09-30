@@ -1,20 +1,23 @@
-using UnityEngine;
+using System.Diagnostics.CodeAnalysis;
 using UnityEditor;
+using UnityEngine;
+
+// Allow selecting a layer through the inspector using a [LayerSelect]
+// attribute on  an int field.
+// Based on http://answers.unity.com/comments/1777780/view.html
 
 namespace MarcosPereira.UnityUtilities {
-    // Allow selecting a layer through the inspector using a [LayerSelect]
-    // attribute.
-    // Based on http://answers.unity.com/comments/1777780/view.html
-
     // This class must be included in game builds or the compiler will throw an
     // error.
-    public class LayerSelectAttribute : PropertyAttribute {}
+    public class LayerSelectAttribute : PropertyAttribute {
+    }
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
 
     // This class must only be included in the editor, or the compiler will throw an
     // error.
     [CustomPropertyDrawer(typeof(LayerSelectAttribute))]
+    [SuppressMessage("", "SA1402:FileMayOnlyContainASingleType", Justification = "Conciseness.")]
     public class LayerAttributeEditor : PropertyDrawer {
         public override void OnGUI(
             Rect position,
@@ -28,5 +31,5 @@ namespace MarcosPereira.UnityUtilities {
         }
     }
 
-    #endif
+#endif
 }
