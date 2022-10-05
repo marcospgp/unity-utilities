@@ -68,7 +68,7 @@ namespace MarcosPereira.UnityUtilities {
                 UnityEngine.Application.isPlaying != isPlayMode
             ) {
                 throw new OperationCanceledException(
-                    "An asynchronous task has been cancelled due to entering or exiting play mode.",
+                    "An asynchronous task has been canceled due to entering or exiting play mode.",
                     token
                 );
             }
