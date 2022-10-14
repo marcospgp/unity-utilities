@@ -4,6 +4,7 @@ using UnityEngine;
 
 // Allow awaiting a task inside a coroutine, as if it were just another
 // coroutine.
+// Usage: yield return someTask.AsCoroutine();
 // Based on https://forum.unity.com/threads/use-async-method-in-coroutine.868825/#post-5719195
 
 namespace MarcosPereira.UnityUtilities {
