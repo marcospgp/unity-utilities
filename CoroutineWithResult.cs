@@ -4,9 +4,9 @@ using System.Collections;
 // result.
 // Usage (from inside another coroutine):
 //
-// var c = new Coroutine<GameObject>(SomeCoroutine());
+// var c = new CoroutineWithResult<SomeType>(SomeCoroutine());
 // yield return c;
-// Gameobject g = c.result;
+// SomeType g = c.result;
 
 namespace MarcosPereira.UnityUtilities {
     public class CoroutineWithResult<T> : IEnumerator {
