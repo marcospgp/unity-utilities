@@ -1,11 +1,13 @@
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
+// Usage is [ReadOnlyField]. Not [ReadOnly] due to conflict with
+// `Unity.Collections.ReadOnlyAttribute`.
+
 namespace MarcosPereira.UnityUtilities {
-    // Usage is [ReadOnlyField]. Not [ReadOnly] due to conflict with
-    // `Unity.Collections.ReadOnlyAttribute`.
     public class ReadOnlyFieldAttribute : PropertyAttribute {
     }
 
