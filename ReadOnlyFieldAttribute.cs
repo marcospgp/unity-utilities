@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -12,6 +13,7 @@ namespace MarcosPereira.UnityUtilities {
     }
 
 #if UNITY_EDITOR
+    [SuppressMessage("", "SA1402:FileMayOnlyContainASingleType")]
     [CustomPropertyDrawer(typeof(ReadOnlyFieldAttribute))]
     public class ReadOnlyFieldPropertyDrawer : PropertyDrawer {
         public override float GetPropertyHeight(
