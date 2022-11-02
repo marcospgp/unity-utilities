@@ -1,16 +1,17 @@
-using UnityEngine;
-using UnityEditor;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using UnityEditor;
+using UnityEngine;
+
+// Allow selecting a tag through the inspector by declaring a string field with
+// [SerializeField] and [TagSelect] attributes.
+// Based on http://www.brechtos.com/tagselectorattribute/
 
 namespace MarcosPereira.UnityUtilities {
-    // Allow selecting a tag through the inspector by declaring a string field with
-    // [SerializeField] and [TagSelect] attributes.
-    // Based on http://www.brechtos.com/tagselectorattribute/
-
     // This class must be included in game builds or the compiler will throw an
     // error.
     public class TagSelectAttribute : PropertyAttribute {
-        public bool UseDefaultTagFieldDrawer = false;
+        public bool useDefaultTagFieldDrawer = false;
     }
 
 #if UNITY_EDITOR
@@ -18,6 +19,7 @@ namespace MarcosPereira.UnityUtilities {
     // This class must only be included in the editor, or the compiler will throw an
     // error.
     [CustomPropertyDrawer(typeof(TagSelectAttribute))]
+    [SuppressMessage("", "SA1402:FileMayOnlyContainASingleType")]
     public class TagSelectPropertyDrawer : PropertyDrawer {
         public override void OnGUI(
             Rect position,
@@ -29,7 +31,7 @@ namespace MarcosPereira.UnityUtilities {
 
                 var attrib = this.attribute as TagSelectAttribute;
 
-                if (attrib.UseDefaultTagFieldDrawer) {
+                if (attrib.useDefaultTagFieldDrawer) {
                     property.stringValue =
                         EditorGUI.TagField(position, label, property.stringValue);
                 } else {
@@ -61,11 +63,11 @@ namespace MarcosPereira.UnityUtilities {
 
                     // Adjust the actual string value of the property based on the selection
                     if (index == 0) {
-                        property.stringValue = "";
+                        property.stringValue = string.Empty;
                     } else if (index >= 1) {
                         property.stringValue = tagList[index];
                     } else {
-                        property.stringValue = "";
+                        property.stringValue = string.Empty;
                     }
                 }
 
