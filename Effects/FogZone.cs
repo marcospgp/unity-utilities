@@ -30,17 +30,17 @@ namespace MarcosPereira {
 
         public void OnTriggerEnter(Collider other) {
             if (other.CompareTag(this.playerCameraTag)) {
-                this.OnUnderwater();
+                this.OnEnter();
             }
         }
 
         public void OnTriggerExit(Collider other) {
             if (other.CompareTag(this.playerCameraTag)) {
-                this.OnOverWater();
+                this.OnLeave();
             }
         }
 
-        private void OnUnderwater() {
+        private void OnEnter() {
             this.objectsHidden = new bool[this.objectsToHide.Length];
 
             for (int i = 0; i < this.objectsToHide.Length; i++) {
@@ -67,7 +67,7 @@ namespace MarcosPereira {
             RenderSettings.fogMode = this.mode;
         }
 
-        private void OnOverWater() {
+        private void OnLeave() {
             for (int i = 0; i < this.objectsToHide.Length; i++) {
                 var renderer = this.objectsToHide[i];
 
