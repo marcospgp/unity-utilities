@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Audio;
 
-// Plays audio based on a collider. Different modes available.
+// Plays 2D audio based on a collider. Different modes available.
 // Requires having a collider on the same GameObject as this.
 // Does not require an audio source - this component adds its own.
 
