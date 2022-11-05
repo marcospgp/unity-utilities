@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Audio;
 
 // Plays audio based on a collider. Different modes available.
 // Requires having a collider on the same GameObject as this.
@@ -15,6 +16,9 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         private AudioClip audioClip;
+
+        [SerializeField]
+        private AudioMixerGroup audioMixer;
 
         [SerializeField]
         [Range(0f, 1f)]
@@ -34,11 +38,11 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         [Tooltip(
-            "Set whether the player's speed is taken into account when determining the audio " +
-            "volume.\nEnabling this requires there to be a character controller in " +
+            "Set whether the other collider's speed is taken into account when determining the " +
+            "audio volume.\nEnabling this requires there to be a character controller in " +
             "one of the player camera's parent gameObjects."
         )]
-        private bool scaleVolumeByPlayerSpeed;
+        private bool scaleVolume;
 
         [SerializeField]
         [Tooltip(
@@ -49,8 +53,7 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         [Tooltip(
-            "The player speed upon entry/exit at which the sound is played at full volume " +
-            "(full volume is defined above)."
+            "The collision speed at which the sound is played at max volume (defined above)."
         )]
         private float maxVolumeSpeed = 10f;
 
@@ -75,8 +78,9 @@ namespace MarcosPereira.UnityUtilities {
             this.audioSource.spatialBlend = 0f; // 2D sound
             this.audioSource.volume = 0f;
             this.audioSource.playOnAwake = false;
+            this.audioSource.outputAudioMixerGroup = this.audioMixer;
 
-            if (this.scaleVolumeByPlayerSpeed) {
+            if (this.scaleVolume) {
                 this.charController = GameObject
                     .FindGameObjectWithTag(this.colliderTag)
                     .GetComponentInParent<CharacterController>();
@@ -148,7 +152,7 @@ namespace MarcosPereira.UnityUtilities {
         }
 
         private float GetVolume() {
-            if (!this.scaleVolumeByPlayerSpeed) {
+            if (!this.scaleVolume) {
                 return this.volume;
             }
 
