@@ -25,6 +25,10 @@ namespace MarcosPereira.UnityUtilities {
         private float volume = 0.5f;
 
         [SerializeField]
+        [Tooltip(
+            "Set whether to loop the sound while in the collider, or to play it only once upon " +
+            "entry or exit."
+        )]
         private Mode mode = Mode.PlayWhileInside;
 
         [Header("PlayWhileInside")]
