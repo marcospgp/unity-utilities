@@ -52,7 +52,8 @@ namespace MarcosPereira.UnityUtilities {
         [Tooltip(
             "Use this to determine which components of the player's movement " +
             "cause the volume to increase. For example, a vertical water " +
-            "splash can be set with (0, -1, 0)")]
+            "splash can be set with (0, -1, 0)"
+        )]
         private Vector3 velocityMultiplier = Vector3.one;
 
         [SerializeField]
