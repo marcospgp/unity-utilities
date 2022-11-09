@@ -4,7 +4,6 @@ using UnityEngine.Audio;
 // Plays 3D audio upon collision. Sound is always 3D to make multiplayer simpler.
 // Creates its own audio source.
 // Requires having a collider on the same GameObject as this.
-// A rigidbody is also needed if one wants collisions with non-trigger colliders to be registered.
 
 namespace MarcosPereira.UnityUtilities {
     [RequireComponent(typeof(Collider))]
@@ -12,6 +11,20 @@ namespace MarcosPereira.UnityUtilities {
         [SerializeField]
         [Tooltip("The layers that will trigger this component upon collision.")]
         private LayerMask targetLayers;
+
+        [SerializeField]
+        [Tooltip("The minimum relative collision speed for an impact to be triggered.")]
+        private float minSpeed = 1f;
+
+        [SerializeField]
+        [Tooltip(
+            "Use this to determine which components of the collision's relative velocity " +
+            "are taken into account when determining its relative speed.\n" +
+            "For example, a vertical water splash can be set with (0, 1, 0)."
+        )]
+        private Vector3 relativeVelocityMultiplier = Vector3.one;
+
+        [Header("Audio")]
 
         [SerializeField]
         [Range(0f, 1f)]
@@ -25,32 +38,24 @@ namespace MarcosPereira.UnityUtilities {
         private float maxVolumeSpeed = 10f;
 
         [SerializeField]
-        [Tooltip("The minimum relative collision speed for an impact to be triggered.")]
-        private float minSpeed;
-
-        [SerializeField]
-        [Tooltip(
-            "Use this to determine which components of the collision's relative velocity " +
-            "are taken into account when determining its relative speed.\n" +
-            "For example, a vertical water splash can be set with (0, 1, 0)."
-        )]
-        private Vector3 relativeVelocityMultiplier = Vector3.one;
-
-        [SerializeField]
         private AudioMixerGroup audioMixer;
 
         [SerializeField]
         [Tooltip("Sounds to play upon impact. Only one is played each time, picked randomly.")]
         private AudioClip[] audioClips;
 
+        [Header("Particles")]
+
         [SerializeField]
         [Tooltip("Particle systems to play upon collision.")]
         private ParticleSystem[] particleSystems;
 
-        private AudioSource audioSource;
+        [SerializeField]
+        private bool alignParticlesWithImpactNormal = true;
 
-        private CharacterController charController;
+        private AudioSource audioSource;
         private new Rigidbody rigidbody;
+        private CharacterController charController;
 
         public void Awake() {
             var child = new GameObject("Audio Source");
@@ -58,7 +63,7 @@ namespace MarcosPereira.UnityUtilities {
 
             this.audioSource = child.AddComponent<AudioSource>();
             this.audioSource.spatialBlend = 1f; // 3D sound
-            this.audioSource.volume = 0f;
+            this.audioSource.volume = 1f; // Will be scaled by PlayOneShot
             this.audioSource.playOnAwake = false;
             this.audioSource.outputAudioMixerGroup = this.audioMixer;
 
@@ -67,7 +72,7 @@ namespace MarcosPereira.UnityUtilities {
         }
 
         public void OnCollisionEnter(Collision collision) {
-            if (IsLayerInMask(collision.gameObject.layer, this.targetLayers)) {
+            if (this.targetLayers.HasLayer(collision.gameObject.layer)) {
                 var contact = collision.GetContact(0);
                 var scaledVelocity =
                     Vector3.Scale(collision.relativeVelocity, this.relativeVelocityMultiplier);
@@ -77,7 +82,7 @@ namespace MarcosPereira.UnityUtilities {
         }
 
         public void OnTriggerEnter(Collider other) {
-            if (IsLayerInMask(other.gameObject.layer, this.targetLayers)) {
+            if (this.targetLayers.HasLayer(other.gameObject.layer)) {
                 Vector3 velocity = Vector3.zero;
 
                 if (other.TryGetComponent(out Rigidbody otherRigidbody)) {
@@ -95,22 +100,45 @@ namespace MarcosPereira.UnityUtilities {
             }
         }
 
-        private static bool IsLayerInMask(int layer, int layerMask) =>
-            ((1 << layer) & layerMask) != 0;
+        // Detects collisions between character controller and static colliders (such as the
+        // ground), which are not detected by OnCollisionEnter nor OnTriggerEnter
+        // (https://docs.unity3d.com/Manual/CollidersOverview.html).
+        //
+        // Setting a minimum impact speed is recommended in this scenario, as this tends to get
+        // called repeatedly when the player is touching the ground.
+        public void OnControllerColliderHit(ControllerColliderHit hit) {
+            if (
+                this.targetLayers.HasLayer(hit.gameObject.layer) &&
+                // Non kinematic rigidbody colliders are handled by OnCollisionEnter.
+                (hit.rigidbody == null || hit.rigidbody.isKinematic)
+            ) {
+                float speed = Vector3.Scale(
+                    hit.controller.velocity,
+                    this.relativeVelocityMultiplier
+                ).magnitude;
+
+                this.OnImpact(hit.point, hit.normal, speed);
+            }
+        }
 
         private void OnImpact(Vector3 position, Vector3 normal, float speed) {
             if (speed < this.minSpeed) {
                 return;
             }
 
+            // UnityEngine.Debug.Log($"Impact at {speed}m/s");
+
             this.PlayRandomClip(position, speed);
 
             foreach (var x in this.particleSystems) {
                 x.Stop();
-                x.transform.SetPositionAndRotation(
-                    position,
-                    x.transform.rotation * Quaternion.FromToRotation(x.transform.up, normal)
-                );
+
+                x.transform.position = position;
+
+                if (this.alignParticlesWithImpactNormal) {
+                    x.transform.rotation *= Quaternion.FromToRotation(x.transform.up, normal);
+                }
+
                 x.Play();
             }
         }
