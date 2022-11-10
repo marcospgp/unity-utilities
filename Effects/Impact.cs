@@ -58,6 +58,8 @@ namespace MarcosPereira.UnityUtilities {
         private CharacterController charController;
 
         public void Awake() {
+            // Audio source is placed in a child GameObject so that it can be placed at the impact
+            // point.
             var child = new GameObject("Audio Source");
             child.transform.SetParent(this.transform);
 
