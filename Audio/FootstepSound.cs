@@ -42,6 +42,10 @@ namespace MarcosPereira.UnityUtilities {
         private float timeSinceLastFootstep;
         private Vector3 lastFootstepPosition;
         private CharacterController characterController;
+
+        // Used to override footsteps when inside a trigger collider.
+        // Leaving any trigger collider will set this back to null, so be careful with nested
+        // trigger colliders.
         private AudioClip[] clipsOverride = null;
 
         private enum DetectionMode {
