@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -38,14 +39,10 @@ namespace MarcosPereira.UnityUtilities {
         private AudioMixerGroup audioMixer;
 
         private AudioSource audioSource;
-
         private float timeSinceLastFootstep;
-
         private Vector3 lastFootstepPosition;
-
         private CharacterController characterController;
-
-        private int triggerLayer = -1;
+        private AudioClip[] clipsOverride = null;
 
         private enum DetectionMode {
             CharacterController,
@@ -87,23 +84,34 @@ namespace MarcosPereira.UnityUtilities {
                     return;
                 }
 
-                int targetLayer = (this.triggerLayer != -1) ?
-                    this.triggerLayer : hit.gameObject.layer;
+                AudioClip[] clips = null;
 
-                foreach (FootstepType type in this.footsteps) {
-                    if (type.layerMask.HasLayer(targetLayer)) {
-                        this.OnFootstep(type.audioClips);
+                if (this.clipsOverride != null) {
+                    clips = this.clipsOverride;
+                } else {
+                    foreach (FootstepType footstep in this.footsteps) {
+                        if (footstep.layerMask.HasLayer(hit.gameObject.layer)) {
+                            clips = footstep.audioClips;
+                            break;
+                        }
                     }
                 }
+
+                this.OnFootstep(clips);
             }
         }
 
         public void OnTriggerEnter(Collider other) {
-            this.triggerLayer = other.gameObject.layer;
+            foreach (FootstepType footstep in this.footsteps) {
+                if (footstep.layerMask.HasLayer(other.gameObject.layer)) {
+                    this.clipsOverride = footstep.audioClips;
+                    break;
+                }
+            }
         }
 
-        public void OnTriggerLeave() {
-            this.triggerLayer = -1;
+        public void OnTriggerExit() {
+            this.clipsOverride = null;
         }
 
         private void OnFootstep(AudioClip[] audioClips) {
