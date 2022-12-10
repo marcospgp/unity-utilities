@@ -2,9 +2,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Audio;
 
-// Plays 2D audio based on a collider. Different modes available.
+// Plays 2D audio inside a collider. Different modes available.
 // Requires having a collider on the same GameObject as this.
-// Does not require an audio source - this component adds its own.
+// Does not require an audio source - it adds its own.
 
 namespace MarcosPereira.UnityUtilities {
     [RequireComponent(typeof(Collider))]
