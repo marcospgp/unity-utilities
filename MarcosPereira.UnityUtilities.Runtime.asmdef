@@ -1,5 +1,5 @@
 {
-    "name": "MarcosPereira.UnityUtilities.Runtime",
+    "name": "UnityUtilities.Runtime",
     "rootNamespace": "",
     "references": [
         "Unity.InputSystem"

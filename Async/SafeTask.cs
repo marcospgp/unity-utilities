@@ -2,7 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MarcosPereira.UnityUtilities {
+namespace UnityUtilities
+{
     /// <summary>
     /// A replacement for `Task.Run()` that cancels tasks when exiting play
     /// mode, which Unity doesn't do by default.
@@ -10,21 +11,23 @@ namespace MarcosPereira.UnityUtilities {
     /// from being swallowed in both Tasks and SafeTasks, when these are
     /// unawaited or chained with `.ContinueWith()`.
     /// </summary>
-    public static class SafeTask {
+    public static class SafeTask
+    {
         private static CancellationTokenSource cancellationTokenSource =
             new CancellationTokenSource();
 
         public static Task<TResult> Run<TResult>(Func<Task<TResult>> f) =>
-            SafeTask.Run<TResult>((object) f);
+            SafeTask.Run<TResult>((object)f);
 
         public static Task<TResult> Run<TResult>(Func<TResult> f) =>
-            SafeTask.Run<TResult>((object) f);
+            SafeTask.Run<TResult>((object)f);
 
-        public static Task Run(Func<Task> f) => SafeTask.Run<object>((object) f);
+        public static Task Run(Func<Task> f) => SafeTask.Run<object>((object)f);
 
-        public static Task Run(Action f) => SafeTask.Run<object>((object) f);
+        public static Task Run(Action f) => SafeTask.Run<object>((object)f);
 
-        private static async Task<TResult> Run<TResult>(object f) {
+        private static async Task<TResult> Run<TResult>(object f)
+        {
             // Exiting play mode by interrupting the editor with a code change
             // does not properly terminate pending tasks running on a separate thread.
             // To work around this, we only successfully return from SafeTasks if
@@ -39,21 +42,31 @@ namespace MarcosPereira.UnityUtilities {
             CancellationToken token = SafeTask.cancellationTokenSource.Token;
             TResult result = default;
 
-            try {
+            try
+            {
                 // Pass token to Task.Run() as well, otherwise upon cancelling
                 // its status will change to faulted instead of cancelled.
                 // https://stackoverflow.com/a/72145763/2037431
 
-                if (f is Func<Task<TResult>> g) {
+                if (f is Func<Task<TResult>> g)
+                {
                     result = await Task.Run(() => g(), token);
-                } else if (f is Func<TResult> h) {
+                }
+                else if (f is Func<TResult> h)
+                {
                     result = await Task.Run(() => h(), token);
-                } else if (f is Func<Task> i) {
+                }
+                else if (f is Func<Task> i)
+                {
                     await Task.Run(() => i(), token);
-                } else if (f is Action j) {
+                }
+                else if (f is Action j)
+                {
                     await Task.Run(() => j(), token);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 // We log unobserved exceptions with an UnobservedTaskException
                 // handler, but those are only handled when garbage collection happens.
                 // We thus force exceptions to be logged here - at least for SafeTasks.
@@ -63,10 +76,8 @@ namespace MarcosPereira.UnityUtilities {
                 throw;
             }
 
-            if (
-                token.IsCancellationRequested ||
-                UnityEngine.Application.isPlaying != isPlayMode
-            ) {
+            if (token.IsCancellationRequested || UnityEngine.Application.isPlaying != isPlayMode)
+            {
                 throw new OperationCanceledException(
                     "An asynchronous task has been canceled due to entering or exiting play mode.",
                     token
@@ -78,7 +89,8 @@ namespace MarcosPereira.UnityUtilities {
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
-        private static void OnLoad() {
+        private static void OnLoad()
+        {
             // Prevent unobserved task exceptions from being swallowed.
             // This happens when:
             //  * An unawaited Task fails;
@@ -93,25 +105,26 @@ namespace MarcosPereira.UnityUtilities {
             // Experimentally, calling `System.GC.Collect()` after the exception
             //  (using a small `Task.Delay()` to ensure it runs after the
             // exception is thrown) caused exceptions to be logged right away.
-            TaskScheduler.UnobservedTaskException +=
-                (_, e) => UnityEngine.Debug.LogException(e.Exception);
+            TaskScheduler.UnobservedTaskException += (_, e) =>
+                UnityEngine.Debug.LogException(e.Exception);
 
             // Cancel pending `Task.Run()` calls when exiting play mode, as
             // Unity won't do that for us.
             // See "Limitations of async and await tasks" (https://docs.unity3d.com/2022.2/Documentation/Manual/overview-of-dot-net-in-unity.html)
             // This only works in SafeTasks, so `Task.Run()` should never be
             // used directly.
-            UnityEditor.EditorApplication.playModeStateChanged +=
-                (change) => {
-                    if (
-                        change == UnityEditor.PlayModeStateChange.ExitingPlayMode ||
-                        change == UnityEditor.PlayModeStateChange.ExitingEditMode
-                    ) {
-                        SafeTask.cancellationTokenSource.Cancel();
-                        SafeTask.cancellationTokenSource.Dispose();
-                        SafeTask.cancellationTokenSource = new CancellationTokenSource();
-                    }
-                };
+            UnityEditor.EditorApplication.playModeStateChanged += (change) =>
+            {
+                if (
+                    change == UnityEditor.PlayModeStateChange.ExitingPlayMode
+                    || change == UnityEditor.PlayModeStateChange.ExitingEditMode
+                )
+                {
+                    SafeTask.cancellationTokenSource.Cancel();
+                    SafeTask.cancellationTokenSource.Dispose();
+                    SafeTask.cancellationTokenSource = new CancellationTokenSource();
+                }
+            };
         }
 #endif
     }

@@ -7,10 +7,12 @@ using UnityEngine;
 // [SerializeField] and [TagSelect] attributes.
 // Based on http://www.brechtos.com/tagselectorattribute/
 
-namespace MarcosPereira.UnityUtilities {
+namespace UnityUtilities
+{
     // This class must be included in game builds or the compiler will throw an
     // error.
-    public class TagSelectAttribute : PropertyAttribute {
+    public class TagSelectAttribute : PropertyAttribute
+    {
         public bool useDefaultTagFieldDrawer = false;
     }
 
@@ -20,37 +22,45 @@ namespace MarcosPereira.UnityUtilities {
     // error.
     [CustomPropertyDrawer(typeof(TagSelectAttribute))]
     [SuppressMessage("", "SA1402:FileMayOnlyContainASingleType")]
-    public class TagSelectPropertyDrawer : PropertyDrawer {
-        public override void OnGUI(
-            Rect position,
-            SerializedProperty property,
-            GUIContent label
-        ) {
-            if (property.propertyType == SerializedPropertyType.String) {
+    public class TagSelectPropertyDrawer : PropertyDrawer
+    {
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            if (property.propertyType == SerializedPropertyType.String)
+            {
                 _ = EditorGUI.BeginProperty(position, label, property);
 
                 var attrib = this.attribute as TagSelectAttribute;
 
-                if (attrib.useDefaultTagFieldDrawer) {
-                    property.stringValue =
-                        EditorGUI.TagField(position, label, property.stringValue);
-                } else {
+                if (attrib.useDefaultTagFieldDrawer)
+                {
+                    property.stringValue = EditorGUI.TagField(
+                        position,
+                        label,
+                        property.stringValue
+                    );
+                }
+                else
+                {
                     //generate the taglist + custom tags
                     var tagList = new List<string>() { "Untagged" };
-                    tagList.AddRange(
-                        UnityEditorInternal.InternalEditorUtility.tags
-                    );
+                    tagList.AddRange(UnityEditorInternal.InternalEditorUtility.tags);
                     string propertyString = property.stringValue;
                     int index = -1;
-                    if (propertyString.Length == 0) {
+                    if (propertyString.Length == 0)
+                    {
                         // The tag is empty
                         index = 0; // First index is Untagged
-                    } else {
+                    }
+                    else
+                    {
                         // Check if there is an entry that matches the entry and get
                         // the index.
                         // Skip index 0 as that is a special custom case.
-                        for (int i = 1; i < tagList.Count; i++) {
-                            if (tagList[i] == propertyString) {
+                        for (int i = 1; i < tagList.Count; i++)
+                        {
+                            if (tagList[i] == propertyString)
+                            {
                                 index = i;
                                 break;
                             }
@@ -58,21 +68,27 @@ namespace MarcosPereira.UnityUtilities {
                     }
 
                     // Draw the popup box with the current selected index
-                    index = EditorGUI
-                        .Popup(position, label.text, index, tagList.ToArray());
+                    index = EditorGUI.Popup(position, label.text, index, tagList.ToArray());
 
                     // Adjust the actual string value of the property based on the selection
-                    if (index == 0) {
+                    if (index == 0)
+                    {
                         property.stringValue = string.Empty;
-                    } else if (index >= 1) {
+                    }
+                    else if (index >= 1)
+                    {
                         property.stringValue = tagList[index];
-                    } else {
+                    }
+                    else
+                    {
                         property.stringValue = string.Empty;
                     }
                 }
 
                 EditorGUI.EndProperty();
-            } else {
+            }
+            else
+            {
                 _ = EditorGUI.PropertyField(position, property, label);
             }
         }

@@ -7,12 +7,16 @@ using UnityEngine;
 // Usage: yield return someTask.AsCoroutine();
 // Based on https://forum.unity.com/threads/use-async-method-in-coroutine.868825/#post-5719195
 
-namespace MarcosPereira.UnityUtilities {
-    public static class TaskAsCoroutineExtension {
-        public static IEnumerator AsCoroutine(this Task task) {
+namespace UnityUtilities
+{
+    public static class TaskAsCoroutineExtension
+    {
+        public static IEnumerator AsCoroutine(this Task task)
+        {
             yield return new WaitUntil(() => task.IsCompleted);
 
-            if (task.Exception != null) {
+            if (task.Exception != null)
+            {
                 throw task.Exception;
             }
         }

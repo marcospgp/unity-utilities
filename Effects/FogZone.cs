@@ -1,17 +1,19 @@
-using MarcosPereira.UnityUtilities;
+using UnityUtilities;
 using UnityEngine;
 
-namespace MarcosPereira {
+namespace MarcosPereira
+{
     [RequireComponent(typeof(Collider))]
-    public class FogZone : MonoBehaviour {
+    public class FogZone : MonoBehaviour
+    {
         [SerializeField]
         [TagSelect]
         private string playerCameraTag;
 
         [SerializeField]
         [Tooltip(
-            "Optionally hide some objects when the fog kicks in, such as " +
-            "hiding the water surface when entering underwater mode."
+            "Optionally hide some objects when the fog kicks in, such as "
+                + "hiding the water surface when entering underwater mode."
         )]
         private Renderer[] objectsToHide;
 
@@ -28,31 +30,39 @@ namespace MarcosPereira {
 
         private bool[] objectsHidden;
 
-        public void OnTriggerEnter(Collider other) {
-            if (other.CompareTag(this.playerCameraTag)) {
+        public void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag(this.playerCameraTag))
+            {
                 this.OnEnter();
             }
         }
 
-        public void OnTriggerExit(Collider other) {
-            if (other.CompareTag(this.playerCameraTag)) {
+        public void OnTriggerExit(Collider other)
+        {
+            if (other.CompareTag(this.playerCameraTag))
+            {
                 this.OnLeave();
             }
         }
 
-        private void OnEnter() {
+        private void OnEnter()
+        {
             this.objectsHidden = new bool[this.objectsToHide.Length];
 
-            for (int i = 0; i < this.objectsToHide.Length; i++) {
+            for (int i = 0; i < this.objectsToHide.Length; i++)
+            {
                 var renderer = this.objectsToHide[i];
 
-                if (renderer.enabled) {
+                if (renderer.enabled)
+                {
                     renderer.enabled = false;
                     this.objectsHidden[i] = true;
                 }
             }
 
-            this.previousFog = new FogSettings() {
+            this.previousFog = new FogSettings()
+            {
                 enabled = RenderSettings.fog,
                 color = RenderSettings.fogColor,
                 density = RenderSettings.fogDensity,
@@ -67,11 +77,14 @@ namespace MarcosPereira {
             RenderSettings.fogMode = this.mode;
         }
 
-        private void OnLeave() {
-            for (int i = 0; i < this.objectsToHide.Length; i++) {
+        private void OnLeave()
+        {
+            for (int i = 0; i < this.objectsToHide.Length; i++)
+            {
                 var renderer = this.objectsToHide[i];
 
-                if (this.objectsHidden[i]) {
+                if (this.objectsHidden[i])
+                {
                     renderer.enabled = true;
                 }
             }
@@ -81,7 +94,8 @@ namespace MarcosPereira {
             this.previousFog.Restore();
         }
 
-        private struct FogSettings {
+        private struct FogSettings
+        {
             public bool enabled;
             public Color color;
             public float density;
@@ -89,7 +103,8 @@ namespace MarcosPereira {
             public float startDistance;
             public float endDistance;
 
-            public void Restore() {
+            public void Restore()
+            {
                 RenderSettings.fog = this.enabled;
                 RenderSettings.fogColor = this.color;
                 RenderSettings.fogDensity = this.density;

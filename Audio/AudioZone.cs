@@ -6,10 +6,12 @@ using UnityEngine.Audio;
 // Requires having a collider on the same GameObject as this.
 // Does not require an audio source - it adds its own.
 
-namespace MarcosPereira.UnityUtilities {
+namespace UnityUtilities
+{
     [RequireComponent(typeof(Collider))]
     [DisallowMultipleComponent]
-    public class AudioZone : MonoBehaviour {
+    public class AudioZone : MonoBehaviour
+    {
         [SerializeField, TagSelect]
         [Tooltip("The tag of the collider that should trigger the sound from this component.")]
         private string colliderTag;
@@ -26,40 +28,36 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         [Tooltip(
-            "Set whether to loop the sound while in the collider, or to play it only once upon " +
-            "entry or exit."
+            "Set whether to loop the sound while in the collider, or to play it only once upon "
+                + "entry or exit."
         )]
         private Mode mode = Mode.PlayWhileInside;
 
         [Header("PlayWhileInside")]
-
         [SerializeField]
         [Range(0f, 5f)]
         [Tooltip("How much the volume can change per second.")]
         private float volumeFadeSpeed = 2f;
 
         [Header("PlayOnEnter/PlayOnExit")]
-
         [SerializeField]
         [Tooltip(
-            "Set whether the other collider's speed is taken into account when determining the " +
-            "audio volume.\nEnabling this requires there to be a character controller in " +
-            "one of the player camera's parent gameObjects."
+            "Set whether the other collider's speed is taken into account when determining the "
+                + "audio volume.\nEnabling this requires there to be a character controller in "
+                + "one of the player camera's parent gameObjects."
         )]
         private bool scaleVolume;
 
         [SerializeField]
         [Tooltip(
-            "Use this to determine which components of the player's movement " +
-            "cause the volume to increase. For example, a vertical water " +
-            "splash can be set with (0, -1, 0)"
+            "Use this to determine which components of the player's movement "
+                + "cause the volume to increase. For example, a vertical water "
+                + "splash can be set with (0, -1, 0)"
         )]
         private Vector3 velocityMultiplier = Vector3.one;
 
         [SerializeField]
-        [Tooltip(
-            "The collision speed at which the sound is played at max volume (defined above)."
-        )]
+        [Tooltip("The collision speed at which the sound is played at max volume (defined above).")]
         private float maxVolumeSpeed = 10f;
 
         private AudioSource audioSource;
@@ -68,14 +66,17 @@ namespace MarcosPereira.UnityUtilities {
 
         private CharacterController charController;
 
-        private enum Mode {
+        private enum Mode
+        {
             PlayWhileInside,
             PlayOnEnter,
             PlayOnExit
         }
 
-        public void Awake() {
-            if (!this.GetComponent<Collider>().isTrigger) {
+        public void Awake()
+        {
+            if (!this.GetComponent<Collider>().isTrigger)
+            {
                 throw new System.Exception("Trigger collider required.");
             }
 
@@ -85,12 +86,14 @@ namespace MarcosPereira.UnityUtilities {
             this.audioSource.playOnAwake = false;
             this.audioSource.outputAudioMixerGroup = this.audioMixer;
 
-            if (this.scaleVolume) {
+            if (this.scaleVolume)
+            {
                 this.charController = GameObject
                     .FindGameObjectWithTag(this.colliderTag)
                     .GetComponentInParent<CharacterController>();
 
-                if (this.charController == null) {
+                if (this.charController == null)
+                {
                     throw new System.Exception(
                         "Missing character controller in player camera's parents."
                     );
@@ -98,73 +101,85 @@ namespace MarcosPereira.UnityUtilities {
             }
         }
 
-        public void OnTriggerEnter(Collider other) {
-            if (!other.CompareTag(this.colliderTag)) {
+        public void OnTriggerEnter(Collider other)
+        {
+            if (!other.CompareTag(this.colliderTag))
+            {
                 return;
             }
 
-            if (this.mode == Mode.PlayWhileInside) {
+            if (this.mode == Mode.PlayWhileInside)
+            {
                 this.audioSource.clip = this.audioClip;
                 this.audioSource.loop = true;
 
-                this.volumeCoroutine =
-                    this.StartCoroutine(this.FadeVolume(this.volume));
-            } else if (this.mode == Mode.PlayOnEnter) {
+                this.volumeCoroutine = this.StartCoroutine(this.FadeVolume(this.volume));
+            }
+            else if (this.mode == Mode.PlayOnEnter)
+            {
                 this.audioSource.volume = this.GetVolume();
                 this.audioSource.PlayOneShot(this.audioClip);
             }
         }
 
-        public void OnTriggerExit(Collider other) {
-            if (!other.CompareTag(this.colliderTag)) {
+        public void OnTriggerExit(Collider other)
+        {
+            if (!other.CompareTag(this.colliderTag))
+            {
                 return;
             }
 
-            if (this.mode == Mode.PlayWhileInside) {
-                this.volumeCoroutine =
-                    this.StartCoroutine(this.FadeVolume(0f));
-            } else if (this.mode == Mode.PlayOnExit) {
+            if (this.mode == Mode.PlayWhileInside)
+            {
+                this.volumeCoroutine = this.StartCoroutine(this.FadeVolume(0f));
+            }
+            else if (this.mode == Mode.PlayOnExit)
+            {
                 this.audioSource.volume = this.GetVolume();
                 this.audioSource.PlayOneShot(this.audioClip);
             }
         }
 
-        private IEnumerator FadeVolume(float targetVolume) {
-            if (this.volumeCoroutine != null) {
+        private IEnumerator FadeVolume(float targetVolume)
+        {
+            if (this.volumeCoroutine != null)
+            {
                 this.StopCoroutine(this.volumeCoroutine);
             }
 
-            if (targetVolume > 0f) {
+            if (targetVolume > 0f)
+            {
                 this.audioSource.Play();
             }
 
             float volume01 = Mathf.Clamp01(targetVolume);
 
-            while (this.audioSource.volume != volume01) {
-                this.audioSource.volume =
-                    Mathf.MoveTowards(
-                        this.audioSource.volume,
-                        volume01,
-                        this.volumeFadeSpeed * Time.deltaTime
-                    );
+            while (this.audioSource.volume != volume01)
+            {
+                this.audioSource.volume = Mathf.MoveTowards(
+                    this.audioSource.volume,
+                    volume01,
+                    this.volumeFadeSpeed * Time.deltaTime
+                );
 
                 yield return null;
             }
 
-            if (this.audioSource.volume == 0f) {
+            if (this.audioSource.volume == 0f)
+            {
                 this.audioSource.Stop();
             }
         }
 
-        private float GetVolume() {
-            if (!this.scaleVolume) {
+        private float GetVolume()
+        {
+            if (!this.scaleVolume)
+            {
                 return this.volume;
             }
 
             float speed = Vector3.Magnitude(
-                Vector3.Scale(
-                    this.charController.velocity, this.velocityMultiplier
-                )
+                Vector3.Scale(this.charController.velocity, this.velocityMultiplier)
             );
 
             float ratio = Mathf.Clamp01(speed / this.maxVolumeSpeed);

@@ -5,8 +5,10 @@ using UnityEngine.Audio;
 // Footstep sounds. Sound is 3D for multiplayer.
 // Creates its own audio source.
 
-namespace MarcosPereira.UnityUtilities {
-    public class FootstepSound : MonoBehaviour {
+namespace UnityUtilities
+{
+    public class FootstepSound : MonoBehaviour
+    {
         [SerializeField]
         [Tooltip("Distance between footsteps.")]
         [Range(0f, 2f)]
@@ -18,16 +20,16 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         [Tooltip(
-            "Define footstep sounds based on the layer of the object being stepped on. " +
-            "Trigger colliders override this, so that water footsteps are always played as long " +
-            "as the player is touching a collider on a \"Water\" layer, for example."
+            "Define footstep sounds based on the layer of the object being stepped on. "
+                + "Trigger colliders override this, so that water footsteps are always played as long "
+                + "as the player is touching a collider on a \"Water\" layer, for example."
         )]
         private FootstepType[] footsteps;
 
         [SerializeField]
         [Tooltip(
-            "If set, the audio source is placed at this point. " +
-            "Otherwise, it is placed at this object's origin."
+            "If set, the audio source is placed at this point. "
+                + "Otherwise, it is placed at this object's origin."
         )]
         private Transform feetPosition;
 
@@ -48,20 +50,23 @@ namespace MarcosPereira.UnityUtilities {
         // trigger colliders.
         private AudioClip[] clipsOverride = null;
 
-        private enum DetectionMode {
+        private enum DetectionMode
+        {
             CharacterController,
             FootCollision,
             AnimationEvent
         }
 
-        public void Awake() {
+        public void Awake()
+        {
             this.characterController = this.GetComponentStrict<CharacterController>();
 
             // Create audio source
 
             Transform audioSourceParent = this.transform;
 
-            if (this.feetPosition != null) {
+            if (this.feetPosition != null)
+            {
                 audioSourceParent = this.feetPosition;
             }
 
@@ -72,29 +77,37 @@ namespace MarcosPereira.UnityUtilities {
             this.audioSource.outputAudioMixerGroup = this.audioMixer;
         }
 
-        public void OnControllerColliderHit(ControllerColliderHit hit) {
+        public void OnControllerColliderHit(ControllerColliderHit hit)
+        {
             this.timeSinceLastFootstep += Time.deltaTime;
 
             if (
-                this.characterController.isGrounded &&
-                this.timeSinceLastFootstep >= this.minStepInterval
-            ) {
+                this.characterController.isGrounded
+                && this.timeSinceLastFootstep >= this.minStepInterval
+            )
+            {
                 float distance = Vector3.Distance(
                     this.lastFootstepPosition,
                     this.transform.position
                 );
 
-                if (distance < this.stride) {
+                if (distance < this.stride)
+                {
                     return;
                 }
 
                 AudioClip[] clips = null;
 
-                if (this.clipsOverride != null) {
+                if (this.clipsOverride != null)
+                {
                     clips = this.clipsOverride;
-                } else {
-                    foreach (FootstepType footstep in this.footsteps) {
-                        if (footstep.layerMask.HasLayer(hit.gameObject.layer)) {
+                }
+                else
+                {
+                    foreach (FootstepType footstep in this.footsteps)
+                    {
+                        if (footstep.layerMask.HasLayer(hit.gameObject.layer))
+                        {
                             clips = footstep.audioClips;
                             break;
                         }
@@ -105,20 +118,25 @@ namespace MarcosPereira.UnityUtilities {
             }
         }
 
-        public void OnTriggerEnter(Collider other) {
-            foreach (FootstepType footstep in this.footsteps) {
-                if (footstep.layerMask.HasLayer(other.gameObject.layer)) {
+        public void OnTriggerEnter(Collider other)
+        {
+            foreach (FootstepType footstep in this.footsteps)
+            {
+                if (footstep.layerMask.HasLayer(other.gameObject.layer))
+                {
                     this.clipsOverride = footstep.audioClips;
                     break;
                 }
             }
         }
 
-        public void OnTriggerExit() {
+        public void OnTriggerExit()
+        {
             this.clipsOverride = null;
         }
 
-        private void OnFootstep(AudioClip[] audioClips) {
+        private void OnFootstep(AudioClip[] audioClips)
+        {
             AudioClip clip = audioClips[Random.Range(0, audioClips.Length)];
             this.audioSource.PlayOneShot(clip, this.volume);
 
@@ -127,7 +145,8 @@ namespace MarcosPereira.UnityUtilities {
         }
 
         [System.Serializable]
-        private struct FootstepType {
+        private struct FootstepType
+        {
             public LayerMask layerMask;
             public AudioClip[] audioClips;
         }

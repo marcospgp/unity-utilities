@@ -4,4 +4,4 @@ C# utility scripts for Unity.
 
 ## Dependencies
 
-* Unity Input System package
+`/Misc/LockCursor.cs`: Unity input system package

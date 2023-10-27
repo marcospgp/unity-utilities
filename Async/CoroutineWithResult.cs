@@ -8,21 +8,26 @@ using System.Collections;
 // yield return c;
 // SomeType g = c.result;
 
-namespace MarcosPereira.UnityUtilities {
-    public class CoroutineWithResult<T> : IEnumerator {
+namespace UnityUtilities
+{
+    public class CoroutineWithResult<T> : IEnumerator
+    {
         public T result;
         private readonly IEnumerator coroutine;
 
-        public CoroutineWithResult(IEnumerator coroutine) {
+        public CoroutineWithResult(IEnumerator coroutine)
+        {
             this.coroutine = coroutine;
         }
 
         object IEnumerator.Current => this.coroutine.Current;
 
-        bool IEnumerator.MoveNext() {
+        bool IEnumerator.MoveNext()
+        {
             bool x = this.coroutine.MoveNext();
 
-            if (this.coroutine.Current is T current) {
+            if (this.coroutine.Current is T current)
+            {
                 this.result = current;
             }
 

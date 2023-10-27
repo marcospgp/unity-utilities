@@ -5,9 +5,11 @@ using UnityEngine.Audio;
 // Creates its own audio source.
 // Requires having a collider on the same GameObject as this.
 
-namespace MarcosPereira.UnityUtilities {
+namespace UnityUtilities
+{
     [RequireComponent(typeof(Collider))]
-    public class Impact : MonoBehaviour {
+    public class Impact : MonoBehaviour
+    {
         [SerializeField]
         [Tooltip("The layers that will trigger this component upon collision.")]
         private LayerMask targetLayers;
@@ -18,22 +20,21 @@ namespace MarcosPereira.UnityUtilities {
 
         [SerializeField]
         [Tooltip(
-            "Use this to determine which components of the collision's relative velocity " +
-            "are taken into account when determining its relative speed.\n" +
-            "For example, a vertical water splash can be set with (0, 1, 0)."
+            "Use this to determine which components of the collision's relative velocity "
+                + "are taken into account when determining its relative speed.\n"
+                + "For example, a vertical water splash can be set with (0, 1, 0)."
         )]
         private Vector3 relativeVelocityMultiplier = Vector3.one;
 
         [Header("Audio")]
-
         [SerializeField]
         [Range(0f, 1f)]
         private float maxVolume = 0.5f;
 
         [SerializeField]
         [Tooltip(
-            "The relative collision speed at which the sound is played at the max volume " +
-            "(defined above)."
+            "The relative collision speed at which the sound is played at the max volume "
+                + "(defined above)."
         )]
         private float maxVolumeSpeed = 10f;
 
@@ -45,7 +46,6 @@ namespace MarcosPereira.UnityUtilities {
         private AudioClip[] audioClips;
 
         [Header("Particles")]
-
         [SerializeField]
         [Tooltip("Particle systems to play upon collision.")]
         private ParticleSystem[] particleSystems;
@@ -57,7 +57,8 @@ namespace MarcosPereira.UnityUtilities {
         private new Rigidbody rigidbody;
         private CharacterController charController;
 
-        public void Awake() {
+        public void Awake()
+        {
             // Audio source is placed in a child GameObject so that it can be placed at the impact
             // point.
             var child = new GameObject("Audio Source");
@@ -73,28 +74,38 @@ namespace MarcosPereira.UnityUtilities {
             this.rigidbody = this.GetComponent<Rigidbody>();
         }
 
-        public void OnCollisionEnter(Collision collision) {
-            if (this.targetLayers.HasLayer(collision.gameObject.layer)) {
+        public void OnCollisionEnter(Collision collision)
+        {
+            if (this.targetLayers.HasLayer(collision.gameObject.layer))
+            {
                 var contact = collision.GetContact(0);
-                var scaledVelocity =
-                    Vector3.Scale(collision.relativeVelocity, this.relativeVelocityMultiplier);
+                var scaledVelocity = Vector3.Scale(
+                    collision.relativeVelocity,
+                    this.relativeVelocityMultiplier
+                );
 
                 this.OnImpact(contact.point, contact.normal, scaledVelocity.magnitude);
             }
         }
 
-        public void OnTriggerEnter(Collider other) {
-            if (this.targetLayers.HasLayer(other.gameObject.layer)) {
+        public void OnTriggerEnter(Collider other)
+        {
+            if (this.targetLayers.HasLayer(other.gameObject.layer))
+            {
                 Vector3 velocity = Vector3.zero;
 
-                if (other.TryGetComponent(out Rigidbody otherRigidbody)) {
+                if (other.TryGetComponent(out Rigidbody otherRigidbody))
+                {
                     // Negative because we want relative velocity from this object to the other.
                     velocity -= otherRigidbody.velocity;
                 }
 
-                if (this.charController != null) {
+                if (this.charController != null)
+                {
                     velocity += this.charController.velocity;
-                } else {
+                }
+                else
+                {
                     velocity += this.rigidbody.velocity;
                 }
 
@@ -108,23 +119,27 @@ namespace MarcosPereira.UnityUtilities {
         //
         // Setting a minimum impact speed is recommended in this scenario, as this tends to get
         // called repeatedly when the player is touching the ground.
-        public void OnControllerColliderHit(ControllerColliderHit hit) {
+        public void OnControllerColliderHit(ControllerColliderHit hit)
+        {
             if (
-                this.targetLayers.HasLayer(hit.gameObject.layer) &&
+                this.targetLayers.HasLayer(hit.gameObject.layer)
+                &&
                 // Non kinematic rigidbody colliders are handled by OnCollisionEnter.
                 (hit.rigidbody == null || hit.rigidbody.isKinematic)
-            ) {
-                float speed = Vector3.Scale(
-                    hit.controller.velocity,
-                    this.relativeVelocityMultiplier
-                ).magnitude;
+            )
+            {
+                float speed = Vector3
+                    .Scale(hit.controller.velocity, this.relativeVelocityMultiplier)
+                    .magnitude;
 
                 this.OnImpact(hit.point, hit.normal, speed);
             }
         }
 
-        private void OnImpact(Vector3 position, Vector3 normal, float speed) {
-            if (speed < this.minSpeed) {
+        private void OnImpact(Vector3 position, Vector3 normal, float speed)
+        {
+            if (speed < this.minSpeed)
+            {
                 return;
             }
 
@@ -132,12 +147,14 @@ namespace MarcosPereira.UnityUtilities {
 
             this.PlayRandomClip(position, speed);
 
-            foreach (var x in this.particleSystems) {
+            foreach (var x in this.particleSystems)
+            {
                 x.Stop();
 
                 x.transform.position = position;
 
-                if (this.alignParticlesWithImpactNormal) {
+                if (this.alignParticlesWithImpactNormal)
+                {
                     x.transform.rotation *= Quaternion.FromToRotation(x.transform.up, normal);
                 }
 
@@ -145,7 +162,8 @@ namespace MarcosPereira.UnityUtilities {
             }
         }
 
-        private void PlayRandomClip(Vector3 position, float speed) {
+        private void PlayRandomClip(Vector3 position, float speed)
+        {
             float volume = this.GetVolume(speed);
 
             AudioClip clip = this.audioClips[Random.Range(0, this.audioClips.Length)];
@@ -154,7 +172,8 @@ namespace MarcosPereira.UnityUtilities {
             this.audioSource.PlayOneShot(clip, volume);
         }
 
-        private float GetVolume(float speed) {
+        private float GetVolume(float speed)
+        {
             float ratio = Mathf.Clamp01(speed / this.maxVolumeSpeed);
 
             return Mathf.Pow(ratio, 2f) * this.maxVolume;

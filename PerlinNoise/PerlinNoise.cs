@@ -1,7 +1,9 @@
 using UnityEngine;
 
-namespace MarcosPereira.UnityUtilities {
-    public static class PerlinNoise {
+namespace UnityUtilities
+{
+    public static class PerlinNoise
+    {
         private const string DEFAULT_SEED = "green bananas";
         private const float DEFAULT_FREQUENCY = 0.01f;
         private const int DEFAULT_OCTAVE_COUNT = 1;
@@ -31,8 +33,10 @@ namespace MarcosPereira.UnityUtilities {
             int numberOfOctaves = PerlinNoise.DEFAULT_OCTAVE_COUNT,
             float lacunarity = PerlinNoise.DEFAULT_LACUNARITY,
             float persistence = PerlinNoise.DEFAULT_PERSISTENCE
-        ) {
-            if (string.IsNullOrEmpty(seed)) {
+        )
+        {
+            if (string.IsNullOrEmpty(seed))
+            {
                 seed = PerlinNoise.DEFAULT_SEED;
             }
 
@@ -41,15 +45,12 @@ namespace MarcosPereira.UnityUtilities {
             float amplitude = 1f;
             float totalAmplitude = 0f;
 
-            for (int i = 0; i < numberOfOctaves; i++) {
+            for (int i = 0; i < numberOfOctaves; i++)
+            {
                 // Make the seed of each octave different to avoid overlap artifacts.
                 string octaveSeed = $"{i}{seed}";
 
-                noise += PerlinNoise.Raw(
-                    x * frequency,
-                    z * frequency,
-                    octaveSeed
-                ) * amplitude;
+                noise += PerlinNoise.Raw(x * frequency, z * frequency, octaveSeed) * amplitude;
 
                 totalAmplitude += amplitude;
 
@@ -67,23 +68,22 @@ namespace MarcosPereira.UnityUtilities {
             int numberOfOctaves = PerlinNoise.DEFAULT_OCTAVE_COUNT,
             float lacunarity = PerlinNoise.DEFAULT_LACUNARITY,
             float persistence = PerlinNoise.DEFAULT_PERSISTENCE
-        ) {
-            if (string.IsNullOrEmpty(seed)) {
+        )
+        {
+            if (string.IsNullOrEmpty(seed))
+            {
                 seed = PerlinNoise.DEFAULT_SEED;
             }
 
-            var texture = new Texture2D(
-                width,
-                width,
-                TextureFormat.RGBA32,
-                false
-            );
+            var texture = new Texture2D(width, width, TextureFormat.RGBA32, false);
 
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < width; y++) {
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < width; y++)
+                {
                     float noise01 = PerlinNoise.Get(
-                        (float) x,
-                        (float) y,
+                        (float)x,
+                        (float)y,
                         seed,
                         baseFrequency,
                         numberOfOctaves,
@@ -91,15 +91,7 @@ namespace MarcosPereira.UnityUtilities {
                         persistence
                     );
 
-                    texture.SetPixel(
-                        x,
-                        y,
-                        Color.Lerp(
-                            Color.black,
-                            Color.white,
-                            noise01
-                        )
-                    );
+                    texture.SetPixel(x, y, Color.Lerp(Color.black, Color.white, noise01));
                 }
             }
 
@@ -109,11 +101,13 @@ namespace MarcosPereira.UnityUtilities {
         }
 
         // Returns a value in range [0, 1].
-        private static float Raw(float x, float z, string seed) {
+        private static float Raw(float x, float z, string seed)
+        {
             int cornerX = Mathf.FloorToInt(x);
             int cornerZ = Mathf.FloorToInt(z);
 
-            var corners = new Vector2Int[] {
+            var corners = new Vector2Int[]
+            {
                 new Vector2Int(cornerX, cornerZ),
                 new Vector2Int(cornerX, cornerZ + 1),
                 new Vector2Int(cornerX + 1, cornerZ + 1),
@@ -122,7 +116,8 @@ namespace MarcosPereira.UnityUtilities {
 
             var gradients = new Vector2[4];
 
-            for (int i = 0; i < gradients.Length; i++) {
+            for (int i = 0; i < gradients.Length; i++)
+            {
                 gradients[i] = Hash.GetDirection(corners[i], seed);
             }
 
@@ -131,7 +126,8 @@ namespace MarcosPereira.UnityUtilities {
 
             var point = new Vector2(u, v);
 
-            var offsets = new Vector2[] {
+            var offsets = new Vector2[]
+            {
                 point,
                 point - new Vector2(0f, 1f),
                 point - new Vector2(1f, 1f),
@@ -140,8 +136,10 @@ namespace MarcosPereira.UnityUtilities {
 
             float[] influences = new float[4];
 
-            for (int i = 0; i < influences.Length; i++) {
-                if (gradients[i] == Vector2.zero) {
+            for (int i = 0; i < influences.Length; i++)
+            {
+                if (gradients[i] == Vector2.zero)
+                {
                     // Density killed this gradient, influence is minimum
                     // possible (-sqrt(N/4), which happens at center of grid
                     // square when gradient is pointing opposite to offset).
