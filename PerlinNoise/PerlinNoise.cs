@@ -13,16 +13,22 @@ namespace UnityUtilities
         /// <summary> Get Perlin Noise value at given position.</summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="z">Z coordinate.</param>
-        /// <param name="seed">Seed used for the random numbers underlying the noise.</param>
-        /// <param name="baseFrequency">The frequency of the first octave.</param>
+        /// <param name="seed">
+        ///     Seed used for the random numbers underlying the noise.
+        /// </param>
+        /// <param name="baseFrequency">
+        ///     The frequency of the first octave.
+        /// </param>
         /// <param name="numberOfOctaves">The number of octaves.</param>
         /// <param name="lacunarity">
-        ///   Each subsequent octave n will have frequency = Mathf.Pow(lacunarity, n). A common
-        ///   value for this parameter is 2.
+        ///     Each subsequent octave n will have frequency
+        ///     Mathf.Pow(lacunarity, n). A common value for this parameter is
+        ///     2.
         /// </param>
         /// <param name="persistence">
-        ///   Each subsequent octave will have amplitude = Mathf.Pow(persistence, n).
-        ///   A common value for this parameter is 0.5.
+        ///     Each subsequent octave will have amplitude
+        ///     Mathf.Pow(persistence, n). A common value for this parameter is
+        ///     0.5.
         /// </param>
         /// <returns>Perlin noise value in [0, 1].</returns>
         public static float Get(
