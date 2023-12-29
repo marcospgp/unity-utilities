@@ -124,7 +124,7 @@ namespace UnityUtilities
 
             for (int i = 0; i < gradients.Length; i++)
             {
-                gradients[i] = Hash.GetDirection(corners[i], seed);
+                gradients[i] = HashFNV.GetDirection(corners[i], seed);
             }
 
             float u = x - cornerX;

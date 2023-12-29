@@ -1,7 +1,6 @@
-using UnityUtilities;
 using UnityEngine;
 
-namespace MarcosPereira
+namespace UnityUtilities
 {
     [RequireComponent(typeof(Collider))]
     public class FogZone : MonoBehaviour
