@@ -1,20 +1,20 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace UnityUtilities
 {
     /// <summary>
     /// A replacement for `Task.Run()` that cancels tasks when exiting play
     /// mode, which Unity doesn't do by default.
-    /// Also registers a UnobservedTaskException handler to prevent exceptions
-    /// from being swallowed in both Tasks and SafeTasks, when these are
-    /// unawaited or chained with `.ContinueWith()`.
+    /// Also registers an UnobservedTaskException handler to prevent exceptions
+    /// from being swallowed in both Tasks and SafeTasks, when these are not
+    /// awaited or are chained with `.ContinueWith()`.
     /// </summary>
     public static class SafeTask
     {
-        private static CancellationTokenSource cancellationTokenSource =
-            new CancellationTokenSource();
+        private static CancellationTokenSource cancellationTokenSource = new();
 
         public static Task<TResult> Run<TResult>(Func<Task<TResult>> f) =>
             SafeTask.Run<TResult>((object)f);
@@ -28,19 +28,18 @@ namespace UnityUtilities
 
         private static async Task<TResult> Run<TResult>(object f)
         {
-            // Exiting play mode by interrupting the editor with a code change
-            // does not properly terminate pending tasks running on a separate thread.
-            // To work around this, we only successfully return from SafeTasks if
-            // `Application.isPlaying` is the same as when execution started.
-            // See more at:
-            // https://forum.unity.com/threads/stopping-play-mode-by-pressing-play-button-or-by-changing-a-script-have-different-outcomes.1337852/#post-8449817
-            bool isPlayMode = UnityEngine.Application.isPlaying;
-
-            // We have to store a token and cannot simply query the source
-            // itself after awaiting, as the token source is replaced with a new
-            // one upon exiting play mode.
-            CancellationToken token = SafeTask.cancellationTokenSource.Token;
+            // We use tokens and not the cancellation source directly as it is
+            // replaced with a new one upon exiting play or edit mode.
+            CancellationToken token = CancellationToken.None;
             TResult result = default;
+
+            // Pending tasks when entering/exiting play mode are only a problem
+            // in the editor.
+            if (Application.isEditor)
+            {
+                SafeTask.cancellationTokenSource ??= new();
+                token = SafeTask.cancellationTokenSource.Token;
+            }
 
             try
             {
@@ -76,7 +75,7 @@ namespace UnityUtilities
                 throw;
             }
 
-            if (token.IsCancellationRequested || UnityEngine.Application.isPlaying != isPlayMode)
+            if (token.IsCancellationRequested)
             {
                 throw new OperationCanceledException(
                     "An asynchronous task has been canceled due to entering or exiting play mode.",
@@ -89,30 +88,25 @@ namespace UnityUtilities
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]
-        private static void OnLoad()
+        private static void OnLoadCallback()
         {
             // Prevent unobserved task exceptions from being swallowed.
             // This happens when:
-            //  * An unawaited Task fails;
+            //  * A Task that isn't awaited fails;
             //  * A Task chained with `.ContinueWith()` fails and exceptions are
             //    not explicitly handled in the function passed to it.
             //
-            // Note that this event handler works for both Tasks and SafeTasks.
+            // This event handler works for both Tasks and SafeTasks.
             //
-            // Also note that this handler may not fire right away. It seems to
-            // only run when garbage collection happens (for example, in the
-            // editor after script reloading).
-            // Experimentally, calling `System.GC.Collect()` after the exception
-            //  (using a small `Task.Delay()` to ensure it runs after the
-            // exception is thrown) caused exceptions to be logged right away.
+            // Note this only seems to run when garbage collection happens (such
+            // as after script reloading in the Unity editor).
+            // Calling `System.GC.Collect()` after the exception caused
+            // exceptions to be logged right away.
             TaskScheduler.UnobservedTaskException += (_, e) =>
                 UnityEngine.Debug.LogException(e.Exception);
 
-            // Cancel pending `Task.Run()` calls when exiting play mode, as
-            // Unity won't do that for us.
-            // See "Limitations of async and await tasks" (https://docs.unity3d.com/2022.2/Documentation/Manual/overview-of-dot-net-in-unity.html)
-            // This only works in SafeTasks, so `Task.Run()` should never be
-            // used directly.
+            // Cancel pending `SafeTask.Run()` calls when exiting play or edit
+            // mode.
             UnityEditor.EditorApplication.playModeStateChanged += (change) =>
             {
                 if (
