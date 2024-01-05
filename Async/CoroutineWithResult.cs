@@ -15,10 +15,7 @@ namespace UnityUtilities
         public T result;
         private readonly IEnumerator coroutine;
 
-        public CoroutineWithResult(IEnumerator coroutine)
-        {
-            this.coroutine = coroutine;
-        }
+        public CoroutineWithResult(IEnumerator coroutine) => this.coroutine = coroutine;
 
         object IEnumerator.Current => this.coroutine.Current;
 

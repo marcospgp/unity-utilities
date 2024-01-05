@@ -6,11 +6,12 @@ using UnityEngine;
 namespace UnityUtilities
 {
     /// <summary>
-    /// A replacement for `Task.Run()` that cancels tasks when exiting play
-    /// mode, which Unity doesn't do by default.
+    /// A replacement for `Task.Run()` that cancels tasks when entering or
+    /// exiting play mode in the Unity editor (which doesn't happen by default).
+    ///
     /// Also registers an UnobservedTaskException handler to prevent exceptions
-    /// from being swallowed in both Tasks and SafeTasks, when these are not
-    /// awaited or are chained with `.ContinueWith()`.
+    /// from being swallowed in all Tasks (including SafeTasks), which would
+    /// happen when these are not awaited or are chained with `.ContinueWith()`.
     /// </summary>
     public static class SafeTask
     {
