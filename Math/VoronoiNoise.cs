@@ -61,13 +61,10 @@ namespace UnityUtilities
 
         private static Vector2 GetCellPoint(float cellX, float cellY, float scale, long seed)
         {
-            byte[] xb = BitConverter.GetBytes(cellX);
-            byte[] yb = BitConverter.GetBytes(cellY);
-
             byte[] bytes = new byte[8];
 
-            Array.Copy(xb, bytes, xb.Length);
-            Array.Copy(yb, 0, bytes, 4, yb.Length);
+            Array.Copy(BitConverter.GetBytes(cellX), bytes, 4);
+            Array.Copy(BitConverter.GetBytes(cellY), 0, bytes, 4, 4);
 
             byte[] hash = XxHash3.Hash(bytes, seed);
 
@@ -77,11 +74,8 @@ namespace UnityUtilities
             Array.Copy(hash, 0, a, 0, 4);
             Array.Copy(hash, 4, b, 0, 4);
 
-            uint a2 = BitConverter.ToUInt32(a);
-            uint b2 = BitConverter.ToUInt32(b);
-
-            float xOffset01 = (float)a2 / (float)uint.MaxValue;
-            float yOffset01 = (float)b2 / (float)uint.MaxValue;
+            float xOffset01 = (float)BitConverter.ToUInt32(a) / (float)uint.MaxValue;
+            float yOffset01 = (float)BitConverter.ToUInt32(b) / (float)uint.MaxValue;
 
             return new Vector2(cellX + (xOffset01 * scale), cellY + (yOffset01 * scale));
         }
