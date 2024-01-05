@@ -12,6 +12,10 @@ namespace UnityUtilities
     /// Also registers an UnobservedTaskException handler to prevent exceptions
     /// from being swallowed in all Tasks (including SafeTasks), which would
     /// happen when these are not awaited or are chained with `.ContinueWith()`.
+    ///
+    /// Unity 2023.1 introduced `Awaitable` and its `BackgroundThreadAsync()`
+    /// method that is essentially a wrapper around `Task.Run()`, but the issues
+    /// addressed by this class remain - so it remains relevant.
     /// </summary>
     public static class SafeTask
     {
