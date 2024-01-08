@@ -15,7 +15,8 @@ namespace UnityUtilities
     ///
     /// Unity 2023.1 introduced `Awaitable` and its `BackgroundThreadAsync()`
     /// method that is essentially a wrapper around `Task.Run()`, but the issues
-    /// addressed by this class remain - so it remains relevant.
+    /// addressed by this class remain - so it remains relevant (see
+    /// https://marcospereira.me/notes/#multithreading).
     /// </summary>
     public static class SafeTask
     {
