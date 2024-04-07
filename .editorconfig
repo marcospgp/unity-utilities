@@ -1,4 +1,9 @@
-# Style and formatting rules for C#.
+# Style and formatting rules for C# projects.
+#
+# This file is maintained in the Unity Utilities repo
+# (https://github.com/marcospgp/unity-utilities).
+# If you are reading this from outside that repo, that means it is likely a
+# symbolic link to the corresponding file in a git submodule.
 
 # Remove the line below if you want to inherit .editorconfig settings from
 # higher directories
