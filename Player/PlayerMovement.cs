@@ -99,7 +99,7 @@ public class PlayerMovement : MonoBehaviour
             this.velocity.y = 0;
         }
 
-        this.velocity.y += (Physics.gravity.y * Time.deltaTime);
+        this.velocity.y += Physics.gravity.y * Time.deltaTime;
     }
 
     private void LookAround()
