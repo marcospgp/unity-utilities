@@ -9,16 +9,15 @@
 # higher directories
 root = true
 
-#
-#
-#
-# Overrides - disabling rules that we don't like.
-#
-#
-#
+# Apply to C# files
+[*.cs]
 
-# All files
-[*]
+charset = utf-8
+
+# Default Severity for all .NET Code Style rules
+# https://docs.microsoft.com/dotnet/fundamentals/code-analysis/configuration-options#scope
+dotnet_analyzer_diagnostic.severity = warning
+dotnet_code_quality.api_surface = all
 
 # SA1003: Symbols must be spaced correctly.
 # Disabled because it forces casts to have no following space,
@@ -151,99 +150,13 @@ dotnet_diagnostic.CA2201.severity = none
 #
 # List of roslynator analyzers configurable in .editorconfig here:
 # https://github.com/JosefPihrt/Roslynator/issues/473#issuecomment-889331342
+# https://josefpihrt.github.io/docs/roslynator/configuration/
 #
 # Note it's still possible to set the severity of any analyzer using
 # "dotnet_diagnostic.RCSxxxx.severity".
 
 # Set severity for all roslynator analyzers that are enabled by default
-dotnet_analyzer_diagnostic.category-roslynator.severity = warning
-
-roslynator.max_line_length = 100
-
-# Add newline after expression-body arrow instead of before it
-roslynator.RCS0032.invert = true
-# Remove newline between closing brace and 'while' keyword
-roslynator.RCS0051.invert = true
-# Add newline after equals sign instead of before it
-roslynator.RCS0052.invert = true
-
-# Roslynator formatting rules (RCS0xxx) are disabled by default, so we set the
-# level for every one manually here.
-# http://pihrt.net/Roslynator/Analyzers?Query=RCS0
-dotnet_diagnostic.RCS0001.severity = warning
-dotnet_diagnostic.RCS0002.severity = warning
-dotnet_diagnostic.RCS0003.severity = warning
-# RCS0004: Add empty line before closing brace of 'do' statement
-dotnet_diagnostic.RCS0004.severity = none
-dotnet_diagnostic.RCS0005.severity = warning
-dotnet_diagnostic.RCS0006.severity = warning
-dotnet_diagnostic.RCS0007.severity = warning
-dotnet_diagnostic.RCS0008.severity = warning
-dotnet_diagnostic.RCS0009.severity = warning
-# RCS0010: Add empty line between declarations
-dotnet_diagnostic.RCS0010.severity = none
-# RCS0011: Add empty line between single-line accessors (or vice versa)
-dotnet_diagnostic.RCS0011.severity = none
-# RCS0012: Add empty line between single-line declarations.
-dotnet_diagnostic.RCS0012.severity = none
-dotnet_diagnostic.RCS0013.severity = warning
-# RCS0014: Add empty line between switch sections.
-dotnet_diagnostic.RCS0014.severity = none
-# RCS0015: Add empty line between using directives.
-dotnet_diagnostic.RCS0015.severity = none
-dotnet_diagnostic.RCS0016.severity = warning
-dotnet_diagnostic.RCS0020.severity = warning
-dotnet_diagnostic.RCS0021.severity = warning
-dotnet_diagnostic.RCS0022.severity = warning
-dotnet_diagnostic.RCS0023.severity = warning
-dotnet_diagnostic.RCS0024.severity = warning
-# RCS0025: Add newline before accessor of full property.
-dotnet_diagnostic.RCS0025.severity = none
-# RCS0027: Add newline before binary operator instead of after it.
-dotnet_diagnostic.RCS0027.severity = none
-# RCS0028: Add newline before conditional operator instead of after it.
-dotnet_diagnostic.RCS0028.severity = none
-# RCS0029: Add newline before constructor initializer.
-dotnet_diagnostic.RCS0029.severity = none
-dotnet_diagnostic.RCS0030.severity = warning
-dotnet_diagnostic.RCS0031.severity = warning
-dotnet_diagnostic.RCS0032.severity = warning
-dotnet_diagnostic.RCS0033.severity = warning
-dotnet_diagnostic.RCS0034.severity = warning
-# RCS0036: Remove empty line between single-line declarations of same kind.
-dotnet_diagnostic.RCS0036.severity = none
-dotnet_diagnostic.RCS0038.severity = warning
-dotnet_diagnostic.RCS0039.severity = warning
-dotnet_diagnostic.RCS0041.severity = warning
-dotnet_diagnostic.RCS0042.severity = warning
-# RCS0044: Use carriage return + linefeed as newline
-# Disable line ending rules. Git should handle line ending conversion.
-dotnet_diagnostic.RCS0044.severity = none
-# RCS0045: Use linefeed as newline
-dotnet_diagnostic.RCS0045.severity = none
-dotnet_diagnostic.RCS0046.severity = warning
-# RCS0047: [deprecated] Use analyzer RCS0053 instead.
-dotnet_diagnostic.RCS0047.severity = none
-# RCS0048: Remove newlines from initializer with single-line expression
-# Disabled, makes lines too long and doesn't seem to help with anything.
-dotnet_diagnostic.RCS0048.severity = none
-dotnet_diagnostic.RCS0049.severity = warning
-dotnet_diagnostic.RCS0050.severity = warning
-dotnet_diagnostic.RCS0051.severity = warning
-dotnet_diagnostic.RCS0052.severity = warning
-# RCS0053: Fix formatting of a list
-# Made it impossible to format a long line without hitting line length limit.
-dotnet_diagnostic.RCS0053.severity = none
-# RCS0054: Fix formatting of a call chain.
-# Wasn't working well.
-dotnet_diagnostic.RCS0054.severity = none
-# RCS0055: Fix formatting of a binary expression chain.
-# Disabled because it forces parenthesis to be on the same line as boolean
-# expression even when multiline.
-dotnet_diagnostic.RCS0055.severity = none
-dotnet_diagnostic.RCS0056.severity = warning
-
-# Roslynator code analysis rules (RCS1xxx) are enabled by default.
+# dotnet_analyzer_diagnostic.category-roslynator.severity = warning
 
 # RCS1042: Remove enum default underlying type.
 dotnet_diagnostic.RCS1042.severity = none
@@ -297,36 +210,7 @@ dotnet_diagnostic.RCS1186.severity = none
 # allow an exception to be thrown in case the cast fails.
 dotnet_diagnostic.RCS1202.severity = none
 
-#
-#
-#
-# Github template rules below
-#
-#
-#
 
-[*]
-charset = utf-8
-
-[*.{cs,csx,cake,vb,vbx}]
-
-# Default Severity for all .NET Code Style rules
-# https://docs.microsoft.com/dotnet/fundamentals/code-analysis/configuration-options#scope
-dotnet_analyzer_diagnostic.severity = warning
-dotnet_code_quality.api_surface = all
-
-#
-#
-#
-#
-# Auto generated .editorconfig from Visual Studio 2019 below
-#
-#
-#
-#
-
-# C# files
-[*.cs]
 
 #### Core EditorConfig Options ####
 
@@ -504,14 +388,6 @@ csharp_space_between_square_brackets = false
 # Wrapping preferences
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = false
-
-#
-#
-#
-# Naming styles
-#
-#
-#
 
 # Naming rules
 
