@@ -97,7 +97,7 @@ namespace UnityUtilities
                 if (other.TryGetComponent(out Rigidbody otherRigidbody))
                 {
                     // Negative because we want relative velocity from this object to the other.
-                    velocity -= otherRigidbody.velocity;
+                    velocity -= otherRigidbody.linearVelocity;
                 }
 
                 if (this.charController != null)
@@ -106,7 +106,7 @@ namespace UnityUtilities
                 }
                 else
                 {
-                    velocity += this.rigidbody.velocity;
+                    velocity += this.rigidbody.linearVelocity;
                 }
 
                 this.OnImpact(this.transform.position, this.transform.up, velocity.magnitude);
