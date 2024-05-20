@@ -42,6 +42,8 @@ dotnet_diagnostic.SA1111.severity = none
 dotnet_diagnostic.SA1118.severity = none
 # SA1120: Comments should contain text.
 dotnet_diagnostic.SA1120.severity = none
+# SA1124: Do not use regions
+dotnet_diagnostic.SA1124.severity = none
 # SA1127: Generic type constraints should be on their own line
 dotnet_diagnostic.SA1127.severity = none
 # SA1128: Put constructor initializers on their own line
@@ -57,6 +59,10 @@ dotnet_diagnostic.SA1307.severity = none
 dotnet_diagnostic.SA1310.severity = none
 # SA1311: Static readonly fields should begin with upper-case letter
 dotnet_diagnostic.SA1311.severity = none
+# SA1312: Variable '_' should begin with lower-case letter
+# Sometimes we want to ignore return values, and must use "_" to avoid unused
+# variable warning.
+dotnet_diagnostic.SA1312.severity = none
 # SA1401: Field should be private
 dotnet_diagnostic.SA1401.severity = none
 # SA1404: Code analysis suppression should have justification
@@ -145,6 +151,16 @@ dotnet_diagnostic.CA1805.severity = none
 # instead.
 dotnet_diagnostic.CA2201.severity = none
 
+# MA0051 - Method is too long.
+# https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0051.md
+# Method length should be up to author.
+dotnet_diagnostic.MA0051.severity = none
+
+# MA0084 - Local variables should not hide other symbols
+# https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0084.md
+# We enforce "this." prefix.
+dotnet_diagnostic.MA0084.severity = none
+
 # Roslynator
 # https://github.com/JosefPihrt/Roslynator
 #
@@ -210,7 +226,14 @@ dotnet_diagnostic.RCS1186.severity = none
 # allow an exception to be thrown in case the cast fails.
 dotnet_diagnostic.RCS1202.severity = none
 
+# Sections of code should not be commented out
+# https://rules.sonarsource.com/csharp/RSPEC-125/
+dotnet_diagnostic.S125.severity = none
 
+# S1481: Remove the unused local variable 'variable name here'.
+# Conflicts with "Expression value is never used (IDE0058)".
+# We want to ignore returned values with "_".
+dotnet_diagnostic.S1481.severity = none
 
 #### Core EditorConfig Options ####
 
