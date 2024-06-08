@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace UnityUtilities
@@ -54,7 +55,7 @@ namespace UnityUtilities
             for (int i = 0; i < numberOfOctaves; i++)
             {
                 // Make the seed of each octave different to avoid overlap artifacts.
-                string octaveSeed = $"{i}{seed}";
+                string octaveSeed = FormattableString.Invariant($"{i}{seed}");
 
                 noise += PerlinNoise.Raw(x * frequency, z * frequency, octaveSeed) * amplitude;
 
@@ -81,7 +82,7 @@ namespace UnityUtilities
                 seed = PerlinNoise.DEFAULT_SEED;
             }
 
-            var texture = new Texture2D(width, width, TextureFormat.RGBA32, false);
+            var texture = new Texture2D(width, width, TextureFormat.RGBA32, mipChain: false);
 
             for (int x = 0; x < width; x++)
             {
@@ -114,10 +115,10 @@ namespace UnityUtilities
 
             var corners = new Vector2Int[]
             {
-                new Vector2Int(cornerX, cornerZ),
-                new Vector2Int(cornerX, cornerZ + 1),
-                new Vector2Int(cornerX + 1, cornerZ + 1),
-                new Vector2Int(cornerX + 1, cornerZ)
+                new(cornerX, cornerZ),
+                new(cornerX, cornerZ + 1),
+                new(cornerX + 1, cornerZ + 1),
+                new(cornerX + 1, cornerZ),
             };
 
             var gradients = new Vector2[4];
@@ -137,7 +138,7 @@ namespace UnityUtilities
                 point,
                 point - new Vector2(0f, 1f),
                 point - new Vector2(1f, 1f),
-                point - new Vector2(1f, 0f)
+                point - new Vector2(1f, 0f),
             };
 
             float[] influences = new float[4];
@@ -160,8 +161,8 @@ namespace UnityUtilities
             // Interpolate the sample coordinates instead of the final values,
             // which avoids some problem I don't remember because I'm writing
             // this months later.
-            float u2 = SmootherStep.Get(u);
-            float v2 = SmootherStep.Get(v);
+            float u2 = SmootherStep(u);
+            float v2 = SmootherStep(v);
 
             float avg1 = Mathf.Lerp(influences[0], influences[3], u2);
             float avg2 = Mathf.Lerp(influences[1], influences[2], u2);
@@ -174,6 +175,29 @@ namespace UnityUtilities
             // away from or towards it (minimum and maximum values,
             // respectively).
             return (avg + Mathf.Sqrt(0.5f)) / Mathf.Sqrt(2f);
+        }
+
+        // Use the quintic smoothstep curve instead of the cubic one.
+        // The quintic has 1st and 2nd degree derivatives of 0 at coordinates 0
+        // and 1, while the cubic only has a 1st degree derivative of 0 at those
+        // points.
+        // https://en.wikipedia.org/wiki/Smoothstep#Variations
+        //
+        // "the 2nd order derivative is the normal's 1st order derivative"
+        // https://stackoverflow.com/a/38441883/2037431
+        private static float SmootherStep(float x)
+        {
+            if (x <= 0f)
+            {
+                return 0f;
+            }
+
+            if (x >= 1f)
+            {
+                return 1f;
+            }
+
+            return (6 * Mathf.Pow(x, 5)) - (15 * Mathf.Pow(x, 4)) + (10 * Mathf.Pow(x, 3));
         }
     }
 }

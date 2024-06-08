@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
@@ -22,13 +23,11 @@ namespace UnityUtilities
         {
             foreach ((int x, int z) in Spiral(this.viewDistance))
             {
-                string name =
-                    "Chunk_x"
-                    + x.ToString(CultureInfo.InvariantCulture)
-                    + "_z"
-                    + z.ToString(CultureInfo.InvariantCulture);
+                string name = FormattableString.Invariant($"Chunk_x{x}_z{z}");
 
-                Mesh chunkMesh = BuildChunkMesh(name, x, z);
+                bool[,,] densityMap = GetDensityMap(x, z);
+
+                Mesh chunkMesh = BuildChunkMesh(name, densityMap);
 
                 var chunk = new GameObject { name = name, layer = this.groundLayer };
 
@@ -46,61 +45,7 @@ namespace UnityUtilities
             }
         }
 
-        // Enumerates coordinates for a spiral.
-        private static IEnumerable<(int, int)> Spiral(int radius)
-        {
-            int radiusSquared = radius * radius;
-            int x = 0;
-            int z = 0;
-
-            yield return (x, z);
-
-            bool IsWithinRadius(int x, int z) => ((x * x) + (z * z)) <= radiusSquared;
-
-            for (int i = 1; i < radius; i++)
-            {
-                z -= 1;
-
-                for (; x < +i; x++)
-                {
-                    if (IsWithinRadius(x, z))
-                    {
-                        yield return (x, z);
-                    }
-                }
-
-                for (; z < +i; z++)
-                {
-                    if (IsWithinRadius(x, z))
-                    {
-                        yield return (x, z);
-                    }
-                }
-
-                for (; x > -i; x--)
-                {
-                    if (IsWithinRadius(x, z))
-                    {
-                        yield return (x, z);
-                    }
-                }
-
-                for (; z > -i; z--)
-                {
-                    if (IsWithinRadius(x, z))
-                    {
-                        yield return (x, z);
-                    }
-                }
-
-                if (IsWithinRadius(x, z))
-                {
-                    yield return (x, z);
-                }
-            }
-        }
-
-        private static Mesh BuildChunkMesh(string name, int chunkX, int chunkZ)
+        private static bool[,,] GetDensityMap(int chunkX, int chunkZ)
         {
             // Density map is larger than chunk (has 1 unit border around XZ)
             // as neighbor info is needed to build mesh.
@@ -108,17 +53,27 @@ namespace UnityUtilities
 
             for (int x = 0; x < densityMap.GetLength(0); x++)
             {
-                for (int y = 0; y < densityMap.GetLength(1); y++)
+                for (int z = 0; z < densityMap.GetLength(2); z++)
                 {
-                    for (int z = 0; z < densityMap.GetLength(2); z++)
+                    int groundY = (int)(
+                        PerlinNoise.Get((chunkX * CHUNK_WIDTH) + x, (chunkZ * CHUNK_WIDTH) + z)
+                        * CHUNK_HEIGHT
+                    );
+
+                    for (int y = 0; y < densityMap.GetLength(1); y++)
                     {
-                        densityMap[x, y, z] = y < (CHUNK_HEIGHT / 2);
+                        densityMap[x, y, z] = y <= groundY;
                     }
                 }
             }
 
-            var ts = new List<int>();
-            var vs = new List<Vector3>();
+            return densityMap;
+        }
+
+        private static Mesh BuildChunkMesh(string name, bool[,,] densityMap)
+        {
+            var ts = new List<int>(); // Triangles
+            var vs = new List<Vector3>(); // Vertices
 
             void AddFace(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3)
             {
@@ -234,6 +189,60 @@ namespace UnityUtilities
             // mesh.Optimize();
 
             return mesh;
+        }
+
+        // Enumerates coordinates for a spiral.
+        private static IEnumerable<(int, int)> Spiral(int radius)
+        {
+            int radiusSquared = radius * radius;
+            int x = 0;
+            int z = 0;
+
+            yield return (x, z);
+
+            bool IsWithinRadius(int x, int z) => ((x * x) + (z * z)) <= radiusSquared;
+
+            for (int i = 1; i < radius; i++)
+            {
+                z -= 1;
+
+                for (; x < +i; x++)
+                {
+                    if (IsWithinRadius(x, z))
+                    {
+                        yield return (x, z);
+                    }
+                }
+
+                for (; z < +i; z++)
+                {
+                    if (IsWithinRadius(x, z))
+                    {
+                        yield return (x, z);
+                    }
+                }
+
+                for (; x > -i; x--)
+                {
+                    if (IsWithinRadius(x, z))
+                    {
+                        yield return (x, z);
+                    }
+                }
+
+                for (; z > -i; z--)
+                {
+                    if (IsWithinRadius(x, z))
+                    {
+                        yield return (x, z);
+                    }
+                }
+
+                if (IsWithinRadius(x, z))
+                {
+                    yield return (x, z);
+                }
+            }
         }
     }
 }
