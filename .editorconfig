@@ -19,6 +19,10 @@ charset = utf-8
 dotnet_analyzer_diagnostic.severity = warning
 dotnet_code_quality.api_surface = all
 
+# SA1000: The keyword 'new' should be followed by a space.
+# https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1000.md
+# Conflicts with CSharpier.
+dotnet_diagnostic.SA1000.severity = none
 # SA1003: Symbols must be spaced correctly.
 # Disabled because it forces casts to have no following space,
 # such as "(int)myVar".
