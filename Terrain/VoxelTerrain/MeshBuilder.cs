@@ -184,7 +184,8 @@ namespace UnityUtilities.Terrain
             int tw = textureAtlasSize.w;
             int th = textureAtlasSize.h;
 
-            int bw = blockTextureSize + 1; // Block width (1px padding).
+            // Block width (adding 1px to account for padding).
+            int bw = blockTextureSize + 1;
 
             int blocksPerRow = (tw - 1) / bw;
 
@@ -194,8 +195,15 @@ namespace UnityUtilities.Terrain
             float u = (float)(1 + (blockX * bw)) / tw;
             float v = (float)(th - ((blockY + 1) * bw)) / th;
 
-            float bw01 = (float)bw / tw;
-            float bh01 = (float)bw / th;
+            float bw01 = (float)blockTextureSize / tw;
+            float bh01 = (float)blockTextureSize / th;
+
+            // Adjust coordinates to avoid edge overflowing texture, causing
+            // hairline artifact.
+            // u += 0.001f;
+            // v += 0.001f;
+            // bw01 -= 0.002f;
+            // bh01 -= 0.002f;
 
             return new Vector2[]
             {
