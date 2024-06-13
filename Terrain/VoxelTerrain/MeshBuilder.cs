@@ -198,12 +198,12 @@ namespace UnityUtilities.Terrain
             float bw01 = (float)blockTextureSize / tw;
             float bh01 = (float)blockTextureSize / th;
 
-            // Adjust coordinates to avoid edge overflowing texture, causing
-            // hairline artifact.
-            // u += 0.001f;
-            // v += 0.001f;
-            // bw01 -= 0.002f;
-            // bh01 -= 0.002f;
+            // Adjust UVs slightly to avoid hairline artifact with edges
+            // overflowing to neighboring pixel in texture atlas.
+            u += 10e-6f;
+            v += 10e-6f;
+            bw01 -= 10e-6f * 2f;
+            bh01 -= 10e-6f * 2f;
 
             return new Vector2[]
             {
