@@ -198,8 +198,9 @@ namespace UnityUtilities.Terrain
             float bw01 = (float)blockTextureSize / tw;
             float bh01 = (float)blockTextureSize / th;
 
-            // Adjust UVs slightly to avoid hairline artifact with edges
-            // overflowing to neighboring pixel in texture atlas.
+            // Inset UVs very slightly to avoid 1px wide artifact with edges
+            // overflowing into neighboring texture atlas pixel in far away
+            // blocks.
             u += 10e-6f;
             v += 10e-6f;
             bw01 -= 10e-6f * 2f;

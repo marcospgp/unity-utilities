@@ -18,16 +18,13 @@ namespace UnityUtilities.Terrain
         private int groundLayer;
 
         [SerializeField]
-        private Texture blockTextureAtlas;
-
         private Material groundMaterial;
+
+        private Texture blockTextureAtlas;
 
         public void Start()
         {
-            this.groundMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-
-            this.groundMaterial.SetTexture("_BaseMap", this.blockTextureAtlas);
-            this.groundMaterial.SetFloat("_Smoothness", 0f);
+            this.blockTextureAtlas = this.groundMaterial.mainTexture;
 
             foreach ((int x, int z) in Spiral(this.viewDistanceInChunks))
             {
