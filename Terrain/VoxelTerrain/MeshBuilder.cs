@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityUtilities.Terran;
 
 namespace UnityUtilities.Terrain
 {
@@ -15,7 +16,7 @@ namespace UnityUtilities.Terrain
         {
             string name = FormattableString.Invariant($"Chunk_x{chunkIndex.x}_z{chunkIndex.z}");
 
-            bool[,,] densityMap = GetDensityMap(chunkIndex, chunkSize);
+            bool[,,] densityMap = Generator.GetDensityMap(chunkIndex, chunkSize);
 
             var ts = new List<int>(); // Triangles
             var vs = new List<Vector3>(); // Vertices
@@ -146,33 +147,6 @@ namespace UnityUtilities.Terrain
             // mesh.Optimize();
 
             return mesh;
-        }
-
-        private static bool[,,] GetDensityMap((int x, int z) chunkIndex, (int w, int h) chunkSize)
-        {
-            // Density map is larger than chunk (has 1 unit border around XZ)
-            // as neighbor info is needed to build mesh.
-            bool[,,] densityMap = new bool[chunkSize.w + 2, chunkSize.h, chunkSize.w + 2];
-
-            for (int x = 0; x < densityMap.GetLength(0); x++)
-            {
-                for (int z = 0; z < densityMap.GetLength(2); z++)
-                {
-                    int groundY = (int)(
-                        PerlinNoise.Get(
-                            (chunkIndex.x * chunkSize.w) + x,
-                            (chunkIndex.z * chunkSize.w) + z
-                        ) * chunkSize.h
-                    );
-
-                    for (int y = 0; y < densityMap.GetLength(1); y++)
-                    {
-                        densityMap[x, y, z] = y <= groundY;
-                    }
-                }
-            }
-
-            return densityMap;
         }
 
         private static Vector2[] GetUVs(

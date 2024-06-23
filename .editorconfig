@@ -159,7 +159,6 @@ dotnet_diagnostic.CA2201.severity = none
 # https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0051.md
 # Method length should be up to author.
 dotnet_diagnostic.MA0051.severity = none
-
 # MA0084 - Local variables should not hide other symbols
 # https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0084.md
 # We enforce "this." prefix.
@@ -180,51 +179,38 @@ dotnet_diagnostic.MA0084.severity = none
 
 # RCS1042: Remove enum default underlying type.
 dotnet_diagnostic.RCS1042.severity = none
-
 # RCS1089: Use ++ operator instead of assignment.
 dotnet_diagnostic.RCS1089.severity = none
-
 # RCS1096: Convert 'HasFlag' call to bitwise operation.
 dotnet_diagnostic.RCS1096.severity = none
-
 # RCS1124: Inline local variable
 # Disabling this rule allows assigning a variable before iterating over it,
 # avoiding extensive loop declarations.
 dotnet_diagnostic.RCS1124.severity = none
-
 # RCS1129: Remove redundant field initialization
 # We want to be explicit.
 dotnet_diagnostic.RCS1129.severity = none
-
 # RCS1139: Add summary element to documentation comment.
 # Sometimes we just want to document a parameter.
 dotnet_diagnostic.RCS1139.severity = none
-
 # RCS1141: Add 'param' element to documentation comment.
 # This warning was triggered when adding a <summary>, which sometimes is enough.
 dotnet_diagnostic.RCS1141.severity = none
-
 # RCS1146: Use conditional access
 # Unity overrides null equality check so we can't use conditional operators.
 dotnet_diagnostic.RCS1146.severity = none
-
 # RCS1161: Enum should declare explicit values
 dotnet_diagnostic.RCS1161.severity = none
-
 # RCS1169: Make field read-only.
 # Overlaps with IDE0044, and unlike it, does not get suppressed when
 # [SerializeField] is added.
 dotnet_diagnostic.RCS1169.severity = none
-
 # RCS1180: Inline lazy initialization
 dotnet_diagnostic.RCS1180.severity = none
-
 # RCS1181: Convert comment to documentation comment.
 dotnet_diagnostic.RCS1181.severity = none
-
 # RCS1186: Use Regex instance instead of static method
 dotnet_diagnostic.RCS1186.severity = none
-
 # RCS1202: Avoid NullReferenceException
 # Sometimes we don't want a "?" in (x as SomeClass)?.SomeMethod(), and instead
 # allow an exception to be thrown in case the cast fails.
@@ -233,11 +219,14 @@ dotnet_diagnostic.RCS1202.severity = none
 # Sections of code should not be commented out
 # https://rules.sonarsource.com/csharp/RSPEC-125/
 dotnet_diagnostic.S125.severity = none
-
 # S1481: Remove the unused local variable 'variable name here'.
 # Conflicts with "Expression value is never used (IDE0058)".
 # We want to ignore returned values with "_".
 dotnet_diagnostic.S1481.severity = none
+# S3241: Change return type to 'void'; not a single caller uses the returned
+# value.
+# Redundant with "Remove unnecessary expression value (IDE0058)".
+dotnet_diagnostic.S3241.severity = none
 
 #### Core EditorConfig Options ####
 
