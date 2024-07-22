@@ -7,12 +7,7 @@ namespace UnityUtilities.Terrain
 {
     public static class MeshBuilder
     {
-        public static Mesh BuildChunkMesh(
-            (int x, int z) chunkIndex,
-            (int w, int h) chunkSize,
-            Texture blockTextureAtlas,
-            int blockTextureSize
-        )
+        public static Mesh BuildChunkMesh((int x, int z) chunkIndex, (int w, int h) chunkSize)
         {
             string name = FormattableString.Invariant($"Chunk_x{chunkIndex.x}_z{chunkIndex.z}");
 
@@ -41,13 +36,10 @@ namespace UnityUtilities.Terrain
                 ts.Add(v + 2);
                 ts.Add(v + 3);
 
-                uvs.AddRange(
-                    GetUVs(
-                        0, // TODO: Remove hardcoded block index.
-                        (blockTextureAtlas.width, blockTextureAtlas.height),
-                        blockTextureSize
-                    )
-                );
+                uvs.Add(new Vector2(0, 0));
+                uvs.Add(new Vector2(0, 1));
+                uvs.Add(new Vector2(1, 1));
+                uvs.Add(new Vector2(1, 0));
             }
 
             // Note x and z start at 1 and end 1 iteration earlier due to 1-unit
@@ -147,46 +139,6 @@ namespace UnityUtilities.Terrain
             // mesh.Optimize();
 
             return mesh;
-        }
-
-        private static Vector2[] GetUVs(
-            int blockIndex,
-            (int w, int h) textureAtlasSize,
-            int blockTextureSize
-        )
-        {
-            int tw = textureAtlasSize.w;
-            int th = textureAtlasSize.h;
-
-            // Block width (adding 1px to account for padding).
-            int bw = blockTextureSize + 1;
-
-            int blocksPerRow = (tw - 1) / bw;
-
-            int blockX = blockIndex % blocksPerRow;
-            int blockY = blockIndex / blocksPerRow;
-
-            float u = (float)(1 + (blockX * bw)) / tw;
-            float v = (float)(th - ((blockY + 1) * bw)) / th;
-
-            float bw01 = (float)blockTextureSize / tw;
-            float bh01 = (float)blockTextureSize / th;
-
-            // Inset UVs very slightly to avoid 1px wide artifact with edges
-            // overflowing into neighboring texture atlas pixel in far away
-            // blocks.
-            u += 10e-6f;
-            v += 10e-6f;
-            bw01 -= 10e-6f * 2f;
-            bh01 -= 10e-6f * 2f;
-
-            return new Vector2[]
-            {
-                new(u, v),
-                new(u, v + bh01),
-                new(u + bw01, v + bh01),
-                new(u + bw01, v),
-            };
         }
     }
 }

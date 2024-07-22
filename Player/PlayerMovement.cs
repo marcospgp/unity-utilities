@@ -7,19 +7,16 @@ namespace UnityUtilities
     {
         [Header("Settings")]
         [SerializeField]
-        [Range(0f, 1f)]
-        private float movementSpeed = 0.5f;
+        private float movementSpeed = 5f;
 
         [SerializeField]
-        [Tooltip("Time it takes to move halfway towards target speed.")]
-        private float acceleration = 0.1f;
+        private float acceleration = 5f;
 
         [SerializeField]
-        [Range(0f, 2f)]
+        private float jumpImpulse = 100f;
+
+        [SerializeField]
         private float mouseSensitivity = 0.5f;
-
-        [SerializeField]
-        private bool lockCursor = true;
 
         [Header("References")]
         [SerializeField]
@@ -38,9 +35,8 @@ namespace UnityUtilities
 
         private Vector3 velocity = Vector3.zero;
         private float yLook = 0f;
-        private const float MIN_SPEED = 0.5f;
 
-        private void Start()
+        public void Start()
         {
             // Lock and hide cursor
             Cursor.lockState = CursorLockMode.Locked;
@@ -54,49 +50,54 @@ namespace UnityUtilities
             this.lookInput = this.inputActions.FindAction("Look", throwIfNotFound: true);
         }
 
-        private void Update()
+        public void Update()
         {
-            // if (this.jumpInput.WasPerformedThisFrame()) {
-            // }
-
+            this.ApplyGravity();
             this.Move();
-
             this.LookAround();
         }
 
         private void Move()
         {
-            this.ApplyGravity();
-
-            Vector2 input = this.moveInput.ReadValue<Vector2>();
-
-            Vector3 worldInput = this.transform.TransformVector(new Vector3(input.x, 0f, input.y));
-
-            Vector3 targetVelocity = this.movementSpeed * 10f * worldInput;
-
-            Vector2 xzVelocity = FILerp.Get(
-                new Vector2(this.velocity.x, this.velocity.z),
-                new Vector2(targetVelocity.x, targetVelocity.z),
-                Time.deltaTime,
-                this.acceleration
-            );
-
-            if (xzVelocity.magnitude < MIN_SPEED)
+            if (this.jumpInput.WasPerformedThisFrame())
             {
-                xzVelocity = Vector2.zero;
+                this.velocity.y = this.jumpImpulse;
             }
 
-            this.velocity.x = xzVelocity.x;
-            this.velocity.z = xzVelocity.y;
+            Vector2 input = this.moveInput.ReadValue<Vector2>().normalized;
 
-            _ = this.characterController.SimpleMove(this.velocity);
+            Vector3 worldInput = this.transform.TransformDirection(
+                new Vector3(input.x, 0f, input.y)
+            );
+
+            // Calculate target XZ velocity.
+            Vector2 targetVelocity = this.movementSpeed * new Vector2(worldInput.x, worldInput.z);
+
+            var xzVelocity = new Vector2(this.velocity.x, this.velocity.z);
+
+            Vector2 delta = targetVelocity - xzVelocity;
+
+            Vector2 impulse = this.acceleration * Time.deltaTime * delta.normalized;
+
+            // Avoid pushing velocity past target velocity.
+            impulse = Vector2.ClampMagnitude(impulse, delta.magnitude);
+
+            xzVelocity += impulse;
+
+            xzVelocity = Vector2.ClampMagnitude(xzVelocity, this.movementSpeed);
+
+            this.velocity = new Vector3(xzVelocity.x, this.velocity.y, xzVelocity.y);
+
+            _ = this.characterController.Move(this.velocity * Time.deltaTime);
         }
 
         private void ApplyGravity()
         {
-            if (this.characterController.isGrounded)
+            // Reset gravity if grounded.
+            // Ensure player is not trying to jump (which would be indicated by
+            // positive Y velocity).
+            if (this.characterController.isGrounded && this.velocity.y < 0)
             {
-                // Reset gravity if grounded
                 this.velocity.y = 0;
             }
 

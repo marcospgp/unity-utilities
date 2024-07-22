@@ -8,7 +8,6 @@ namespace UnityUtilities.Terrain
     {
         private const int CHUNK_WIDTH = 16;
         private const int CHUNK_HEIGHT = 256;
-        private const int BLOCK_TEXTURE_SIZE = 16;
 
         private readonly Dictionary<(int, int), GameObject> chunks = new();
 
@@ -19,14 +18,10 @@ namespace UnityUtilities.Terrain
         private int groundLayer;
 
         [SerializeField]
-        private Material groundMaterial;
-
-        private Texture blockTextureAtlas;
+        private Material dirtMaterial;
 
         public void Start()
         {
-            this.blockTextureAtlas = this.groundMaterial.mainTexture;
-
             foreach ((int x, int z) in Spiral(this.viewDistanceInChunks))
             {
                 this.chunks.Add((x, z), this.BuildChunk(x, z));
@@ -91,12 +86,7 @@ namespace UnityUtilities.Terrain
         {
             string name = FormattableString.Invariant($"Chunk_x{x}_z{z}");
 
-            Mesh chunkMesh = MeshBuilder.BuildChunkMesh(
-                (x, z),
-                (CHUNK_WIDTH, CHUNK_HEIGHT),
-                this.blockTextureAtlas,
-                BLOCK_TEXTURE_SIZE
-            );
+            Mesh chunkMesh = MeshBuilder.BuildChunkMesh((x, z), (CHUNK_WIDTH, CHUNK_HEIGHT));
 
             var chunk = new GameObject { name = name, layer = this.groundLayer };
 
@@ -104,13 +94,15 @@ namespace UnityUtilities.Terrain
 
             MeshRenderer meshRenderer = chunk.AddComponent<MeshRenderer>();
 
-            meshRenderer.material = this.groundMaterial;
+            meshRenderer.material = this.dirtMaterial;
 
             MeshFilter meshFilter = chunk.AddComponent<MeshFilter>();
 
             // Use sharedMesh and not mesh to avoid making a copy
             // unnecessarily.
             meshFilter.sharedMesh = chunkMesh;
+
+            _ = chunk.AddComponent<MeshCollider>();
 
             return chunk;
         }

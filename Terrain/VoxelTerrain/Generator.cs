@@ -15,9 +15,16 @@ namespace UnityUtilities.Terran
                     int groundY = (int)(
                         PerlinNoise.Get(
                             (chunkIndex.x * chunkSize.w) + x,
-                            (chunkIndex.z * chunkSize.w) + z
+                            (chunkIndex.z * chunkSize.w) + z,
+                            seed: null,
+                            baseFrequency: 0.001f,
+                            numberOfOctaves: 3,
+                            lacunarity: 4,
+                            persistence: 0.8f
                         ) * chunkSize.h
                     );
+
+                    // const int groundY = 128;
 
                     for (int y = 0; y < densityMap.GetLength(1); y++)
                     {
