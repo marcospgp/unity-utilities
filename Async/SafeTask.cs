@@ -10,7 +10,7 @@ namespace UnityUtilities
     /// exiting play mode in the Unity editor (which doesn't happen by default).
     ///
     /// Also registers an UnobservedTaskException handler to prevent exceptions
-    /// from being swallowed in all Tasks (including SafeTasks), which would
+    /// from being swallowed in both SafeTasks and native Tasks, which would
     /// happen when these are not awaited or are chained with `.ContinueWith()`.
     ///
     /// Unity 2023.1 introduced `Awaitable` and its `BackgroundThreadAsync()`
@@ -73,10 +73,12 @@ namespace UnityUtilities
             catch (Exception e)
             {
                 // We log unobserved exceptions with an UnobservedTaskException
-                // handler, but those are only handled when garbage collection happens.
-                // We thus force exceptions to be logged here - at least for SafeTasks.
-                // If a failing SafeTask is awaited, the exception will be logged twice, but that's
-                // ok.
+                // handler, but those are only handled when garbage collection
+                // happens.
+                // We thus force exceptions to be logged here - at least for
+                // SafeTasks.
+                // If a failing SafeTask is awaited, the exception will be
+                // logged twice, but that's ok.
                 UnityEngine.Debug.LogException(e);
                 throw;
             }

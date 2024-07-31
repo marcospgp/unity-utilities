@@ -90,6 +90,8 @@ dotnet_diagnostic.SA1602.severity = none
 # SA1604: Element documentation should have summary
 # Sometimes we just want to document a parameter, or something of the sort.
 dotnet_diagnostic.SA1604.severity = none
+# SA1618GenericTypeParametersMustBeDocumented
+dotnet_diagnostic.SA1618.severity = none
 # SA1611: The documentation for parameter 'x' is missing
 # This warning was triggered when adding a <summary>, which sometimes is enough.
 dotnet_diagnostic.SA1611.severity = none
@@ -126,6 +128,9 @@ dotnet_diagnostic.IDE0049.severity = none
 # IDE0130: Namespace does not match folder structure
 # Avoid having to include "Assets" in namespace for Unity projects.
 dotnet_diagnostic.IDE0130.severity = none
+# IDE0270: Null check can be simplified
+# Unity overloads equality operator for null checks.
+dotnet_diagnostic.IDE0270.severity = none
 
 # CA1000: Do not declare static members on generic types
 # Stupidly restrictive
@@ -155,11 +160,15 @@ dotnet_diagnostic.CA1805.severity = none
 # instead.
 dotnet_diagnostic.CA2201.severity = none
 
-# MA0051 - Method is too long.
+# MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.MA0004.severity = none
+# MA0016: Prefer using collection abstraction instead of implementation
+dotnet_diagnostic.MA0016.severity = none
+# MA0051: Method is too long.
 # https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0051.md
 # Method length should be up to author.
 dotnet_diagnostic.MA0051.severity = none
-# MA0084 - Local variables should not hide other symbols
+# MA0084: Local variables should not hide other symbols
 # https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0084.md
 # We enforce "this." prefix.
 dotnet_diagnostic.MA0084.severity = none
@@ -196,6 +205,8 @@ dotnet_diagnostic.RCS1139.severity = none
 # RCS1141: Add 'param' element to documentation comment.
 # This warning was triggered when adding a <summary>, which sometimes is enough.
 dotnet_diagnostic.RCS1141.severity = none
+# RCS1142: Add 'typeparam' element to documentation comment
+dotnet_diagnostic.RCS1142.severity = none
 # RCS1146: Use conditional access
 # Unity overrides null equality check so we can't use conditional operators.
 dotnet_diagnostic.RCS1146.severity = none
@@ -215,18 +226,36 @@ dotnet_diagnostic.RCS1186.severity = none
 # Sometimes we don't want a "?" in (x as SomeClass)?.SomeMethod(), and instead
 # allow an exception to be thrown in case the cast fails.
 dotnet_diagnostic.RCS1202.severity = none
+# RCS1226: Add paragraph to documentation comment
+dotnet_diagnostic.RCS1226.severity = none
 
 # Sections of code should not be commented out
 # https://rules.sonarsource.com/csharp/RSPEC-125/
 dotnet_diagnostic.S125.severity = none
 # S1481: Remove the unused local variable 'variable name here'.
 # Conflicts with "Expression value is never used (IDE0058)".
-# We want to ignore returned values with "_".
+# We want to be able to ignore returned values using "_".
 dotnet_diagnostic.S1481.severity = none
+# S1854: Unused assignments should be removed
+# We want to be able to ignore returned values using "_".
+dotnet_diagnostic.S1854.severity = none
 # S3241: Change return type to 'void'; not a single caller uses the returned
 # value.
 # Redundant with "Remove unnecessary expression value (IDE0058)".
 dotnet_diagnostic.S3241.severity = none
+# S3887: Use an immutable collection or reduce the accessibility of the
+# non-private readonly field <field name>.
+# No reason to disallow readonly public reference fields.
+dotnet_diagnostic.S3887.severity = none
+
+# VSTHRD111 Use .ConfigureAwait(bool)
+dotnet_diagnostic.VSTHRD111.severity = none
+# VSTHRD200 Use Async suffix for async methods
+dotnet_diagnostic.VSTHRD200.severity = none
+
+# UNT0006 Incorrect message signature
+# Incompatible with async code in Unity events such as Start() or Update().
+dotnet_diagnostic.UNT0006.severity = none
 
 #### Core EditorConfig Options ####
 

@@ -1,30 +1,62 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
     public class VoxelTerrain : MonoBehaviour
     {
-        private const int CHUNK_WIDTH = 16;
-        private const int CHUNK_HEIGHT = 256;
+        public const float BLOCK_SIZE = 1f;
+        private const int CHUNK_WIDTH_IN_BLOCKS = 16;
 
-        private readonly Dictionary<(int, int), GameObject> chunks = new();
+        /// <summary>
+        /// Chunks.
+        /// Note X and Z are indices, not real coordinates.
+        /// </summary>
+        private static readonly Dictionary<
+            (int x, int z),
+            (Chunk chunk, GameObject chunkGameObject)
+        > chunks = new();
 
         [SerializeField]
-        private int viewDistanceInChunks = 16;
+        [Tooltip("Terrain materials in the same order as in the Block enum.")]
+        private Material[] materials;
+
+        [SerializeField]
+        private float viewDistance = 1000f;
 
         [SerializeField, LayerSelect]
         private int groundLayer;
 
-        [SerializeField]
-        private Material dirtMaterial;
+        public static event EventHandler<Chunk> OnFirstChunk;
 
-        public void Start()
+        // Unity event.
+        public async Task Start()
         {
-            foreach ((int x, int z) in Spiral(this.viewDistanceInChunks))
+            int viewDistanceInChunks = (int)(
+                this.viewDistance / (CHUNK_WIDTH_IN_BLOCKS * BLOCK_SIZE)
+            );
+
+            foreach ((int x, int z) in Spiral(viewDistanceInChunks))
             {
-                this.chunks.Add((x, z), this.BuildChunk(x, z));
+                VoxelTerrain.chunks.Add(
+                    (x, z),
+                    await Builder.BuildChunk(
+                        (x, z),
+                        CHUNK_WIDTH_IN_BLOCKS,
+                        BLOCK_SIZE,
+                        this.materials,
+                        this.groundLayer
+                    )
+                );
+
+                if (x == 0 && z == 0)
+                {
+                    VoxelTerrain.OnFirstChunk(sender: null, chunks[(0, 0)].chunk);
+                    // Flag for garbage collection.
+                    VoxelTerrain.OnFirstChunk = null;
+                }
             }
         }
 
@@ -80,31 +112,6 @@ namespace UnityUtilities.Terrain
                     yield return (x, z);
                 }
             }
-        }
-
-        private GameObject BuildChunk(int x, int z)
-        {
-            string name = FormattableString.Invariant($"Chunk_x{x}_z{z}");
-
-            Mesh chunkMesh = MeshBuilder.BuildChunkMesh((x, z), (CHUNK_WIDTH, CHUNK_HEIGHT));
-
-            var chunk = new GameObject { name = name, layer = this.groundLayer };
-
-            chunk.transform.position = new Vector3(x * CHUNK_WIDTH, 0, z * CHUNK_WIDTH);
-
-            MeshRenderer meshRenderer = chunk.AddComponent<MeshRenderer>();
-
-            meshRenderer.material = this.dirtMaterial;
-
-            MeshFilter meshFilter = chunk.AddComponent<MeshFilter>();
-
-            // Use sharedMesh and not mesh to avoid making a copy
-            // unnecessarily.
-            meshFilter.sharedMesh = chunkMesh;
-
-            _ = chunk.AddComponent<MeshCollider>();
-
-            return chunk;
         }
     }
 }

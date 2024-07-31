@@ -36,10 +36,10 @@ namespace UnityUtilities
             float x,
             float z,
             string seed = null,
-            float baseFrequency = PerlinNoise.DEFAULT_FREQUENCY,
-            int numberOfOctaves = PerlinNoise.DEFAULT_OCTAVE_COUNT,
-            float lacunarity = PerlinNoise.DEFAULT_LACUNARITY,
-            float persistence = PerlinNoise.DEFAULT_PERSISTENCE
+            float baseFrequency = 0.01f,
+            int numberOfOctaves = 1,
+            float lacunarity = 2f,
+            float persistence = 0.5f
         )
         {
             if (string.IsNullOrEmpty(seed))
