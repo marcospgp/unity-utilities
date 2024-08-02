@@ -29,7 +29,7 @@ namespace UnityUtilities
 
         public static Texture2D DebugTextureInt(int width = 512, string seed = "green bananas")
         {
-            var texture = new Texture2D(width, width, TextureFormat.RGBA32, false);
+            var texture = new Texture2D(width, width, TextureFormat.RGBA32, mipChain: false);
 
             for (int x = 0; x < width; x++)
             {
@@ -48,7 +48,7 @@ namespace UnityUtilities
 
         public static Texture2D DebugTextureFloat(int width = 512, string seed = "green bananas")
         {
-            var texture = new Texture2D(width, width, TextureFormat.RGBA32, false);
+            var texture = new Texture2D(width, width, TextureFormat.RGBA32, mipChain: false);
 
             for (int x = 0; x < width; x++)
             {
@@ -117,6 +117,10 @@ namespace UnityUtilities
             return Coordinates(xb, yb, seed);
         }
 
+        public static uint Get(int x, string seed) => Get(BitConverter.GetBytes(x), seed);
+
+        public static uint Get(float x, string seed) => Get(BitConverter.GetBytes(x), seed);
+
         private static uint Coordinates(byte[] x, byte[] y, string seed)
         {
             byte[] bytes = new byte[8];
@@ -131,10 +135,6 @@ namespace UnityUtilities
             uint hash1 = FNV1a(bytes, offsetBasis);
             return FNV1a(BitConverter.GetBytes(hash1), offsetBasis);
         }
-
-        public static uint Get(int x, string seed) => Get(BitConverter.GetBytes(x), seed);
-
-        public static uint Get(float x, string seed) => Get(BitConverter.GetBytes(x), seed);
 
         private static uint FNV1a(byte[] bytes, uint offsetBasis)
         {

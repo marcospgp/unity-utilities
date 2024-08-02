@@ -4,6 +4,10 @@ namespace UnityUtilities.Terrain
 {
     public static class Generator
     {
+        private const float BASE_HEIGHT = 64f; // Ocean floor height.
+        private const float LAND_HEIGHT = 32f;
+        private const float WATER_LEVEL = BASE_HEIGHT + LAND_HEIGHT - 3.2f;
+
         /// <summary>
         /// Generating a chunk with a 1-block border is useful for building a
         /// chunk's mesh, as we check neighboring blocks when deciding whether
@@ -31,13 +35,22 @@ namespace UnityUtilities.Terrain
 
                     float groundHeight = GetGroundHeight(globalX, globalZ);
 
-                    int groundHeightInBlocks = (int)MathF.Round(groundHeight / blockSize);
+                    int groundHeightInBlocks = (int)(groundHeight / blockSize);
 
                     var column = new Block[groundHeightInBlocks];
 
                     Array.Fill(column, value: Block.Dirt);
 
-                    column[^1] = Block.Grass;
+                    int waterLevelInBlocks = (int)(MathF.Ceiling(WATER_LEVEL) / blockSize) + 1;
+
+                    if (groundHeightInBlocks > waterLevelInBlocks)
+                    {
+                        column[^1] = Block.Grass;
+                    }
+                    else if (groundHeightInBlocks == waterLevelInBlocks)
+                    {
+                        column[^1] = Block.Sand;
+                    }
 
                     chunk.SetColumn(x, z, column);
                 }
@@ -48,13 +61,48 @@ namespace UnityUtilities.Terrain
 
         private static float GetGroundHeight(float x, float z)
         {
-            // Ocean floor height.
-            const float baseHeight = 128;
+            float landNoise = PerlinNoise.Get(
+                x,
+                z,
+                seed: "base",
+                baseFrequency: 0.003f,
+                numberOfOctaves: 1
+            );
 
-            // 0 = ocean, 1 = land
-            float land = PerlinNoise.Get(x, z, baseFrequency: 0.01f) * 128;
+            // Increase proportion of land.
+            landNoise = MathF.Pow(landNoise, 0.8f);
 
-            return baseHeight + land;
+            // Remap into [-0.5, 0.5] for sigmoid.
+            landNoise = (landNoise * 2f) - 1f;
+            landNoise = Sigmoid(landNoise, 25);
+
+            float landHeight = landNoise * LAND_HEIGHT;
+
+            // Mountains
+            float mountainHeight = 0;
+
+            bool isLand = landHeight > WATER_LEVEL;
+
+            if (isLand)
+            {
+                float mountainNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "mountains",
+                    baseFrequency: 0.03f,
+                    numberOfOctaves: 1,
+                    lacunarity: 4f,
+                    persistence: 0.8f
+                );
+
+                mountainNoise = MathF.Pow(mountainNoise, 4f);
+
+                // mountainHeight = 32f * mountainNoise;
+            }
+
+            return BASE_HEIGHT + landHeight + mountainHeight;
         }
+
+        private static float Sigmoid(float x, float k) => 1f / (1f + MathF.Exp(-k * x));
     }
 }

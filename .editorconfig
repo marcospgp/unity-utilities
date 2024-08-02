@@ -106,6 +106,8 @@ dotnet_diagnostic.SA1614.severity = none
 dotnet_diagnostic.SA1615.severity = none
 # SA1623: Property documentation should include "gets" and/or "sets"
 dotnet_diagnostic.SA1623.severity = none
+# SA1629: Documentation text should end with a period
+dotnet_diagnostic.SA1629.severity = none
 # SA1633: The file header is missing or not located at the top of the file.
 dotnet_diagnostic.SA1633.severity = none
 # SA1642: Constructor summary documentation should begin with standard text
@@ -164,6 +166,12 @@ dotnet_diagnostic.CA2201.severity = none
 dotnet_diagnostic.MA0004.severity = none
 # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0016.severity = none
+# MA0046: The second parameter must be of type 'System.EventArgs' or a derived type
+dotnet_diagnostic.MA0046.severity = none
+# MA0048: File name must match type name
+# Duplicate of "SA1649", and sometimes we want to suppress it without having to
+# suppress two rules (would require two SuppressMessage attributes).
+dotnet_diagnostic.MA0048.severity = none
 # MA0051: Method is too long.
 # https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0051.md
 # Method length should be up to author.
@@ -229,6 +237,8 @@ dotnet_diagnostic.RCS1202.severity = none
 # RCS1226: Add paragraph to documentation comment
 dotnet_diagnostic.RCS1226.severity = none
 
+# S101: Rename class 'HashFNV' to match pascal case naming rules, consider using 'HashFnv'.
+dotnet_diagnostic.S101.severity = none
 # Sections of code should not be commented out
 # https://rules.sonarsource.com/csharp/RSPEC-125/
 dotnet_diagnostic.S125.severity = none

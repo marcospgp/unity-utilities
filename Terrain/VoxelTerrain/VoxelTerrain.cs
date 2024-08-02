@@ -20,8 +20,11 @@ namespace UnityUtilities.Terrain
         > chunks = new();
 
         [SerializeField]
-        [Tooltip("Terrain materials in the same order as in the Block enum.")]
-        private Material[] materials;
+        [Tooltip("Terrain textures, in the same order as they appear in BlockTexture.")]
+        private Texture2D[] textures;
+
+        [SerializeField]
+        private Material baseMaterial;
 
         [SerializeField]
         private float viewDistance = 1000f;
@@ -29,11 +32,24 @@ namespace UnityUtilities.Terrain
         [SerializeField, LayerSelect]
         private int groundLayer;
 
+        private Material[] materials;
+
         public static event EventHandler<Chunk> OnFirstChunk;
 
         // Unity event.
         public async Task Start()
         {
+            // Turn terrain textures into materials.
+            this.materials = new Material[this.textures.Length];
+
+            for (int i = 0; i < this.textures.Length; i++)
+            {
+                this.materials[i] = new Material(this.baseMaterial)
+                {
+                    mainTexture = this.textures[i],
+                };
+            }
+
             int viewDistanceInChunks = (int)(
                 this.viewDistance / (CHUNK_WIDTH_IN_BLOCKS * BLOCK_SIZE)
             );

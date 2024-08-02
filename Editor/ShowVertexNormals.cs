@@ -19,8 +19,6 @@ namespace UnityUtilities
                     Vector3[] vertices = mesh.vertices;
                     Vector3[] normals = mesh.normals;
 
-                    Debug.Log($"{normals.Length}");
-
                     // Transform each vertex and normal to world space
                     for (int i = 0; i < vertices.Length; i++)
                     {

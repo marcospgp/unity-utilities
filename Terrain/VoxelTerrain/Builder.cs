@@ -6,16 +6,6 @@ namespace UnityUtilities.Terrain
 {
     public static class Builder
     {
-        private enum Face : byte
-        {
-            XPlus,
-            XMinus,
-            YPlus,
-            YMinus,
-            ZPlus,
-            ZMinus,
-        }
-
         public static async Task<(Chunk, GameObject)> BuildChunk(
             (int x, int z) chunkIndex,
             int chunkWidthInBlocks,
@@ -75,41 +65,37 @@ namespace UnityUtilities.Terrain
                     continue;
                 }
 
-                // Because Block.Air is 0, we decrement submesh index by 1 to
-                // avoid the first submesh always being empty.
-                int submesh = (byte)block - 1;
-
-                // Offset to compensate 1-unit border.
+                // Subtract 1 to compensate 1-unit border.
                 var pos = new Vector3(x - 1, y, z - 1);
 
                 if (chunk[x + 1, y, z] == Block.Air)
                 {
-                    AddFace(mesh, Face.XPlus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.XPlus, pos, blockSize, block);
                 }
 
                 if (chunk[x - 1, y, z] == Block.Air)
                 {
-                    AddFace(mesh, Face.XMinus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.XMinus, pos, blockSize, block);
                 }
 
                 if (chunk[x, y + 1, z] == Block.Air)
                 {
-                    AddFace(mesh, Face.YPlus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.YPlus, pos, blockSize, block);
                 }
 
                 if (y > 0 && chunk[x, y - 1, z] == Block.Air)
                 {
-                    AddFace(mesh, Face.YMinus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.YMinus, pos, blockSize, block);
                 }
 
                 if (chunk[x, y, z + 1] == Block.Air)
                 {
-                    AddFace(mesh, Face.ZPlus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.ZPlus, pos, blockSize, block);
                 }
 
                 if (chunk[x, y, z - 1] == Block.Air)
                 {
-                    AddFace(mesh, Face.ZMinus, pos, blockSize, submesh);
+                    AddFace(mesh, Face.ZMinus, pos, blockSize, block);
                 }
             }
 
@@ -121,7 +107,7 @@ namespace UnityUtilities.Terrain
             Face face,
             Vector3 offset,
             float blockSize,
-            int submesh
+            Block block
         )
         {
             Vector3 v0 = offset;
@@ -180,6 +166,12 @@ namespace UnityUtilities.Terrain
             v1 *= blockSize;
             v2 *= blockSize;
             v3 *= blockSize;
+
+            // // Because Block.Air is 0, we decrement submesh index by 1 to
+            // //     avoid the first submesh always being empty.
+            //     int submesh = (byte)block - 1;
+
+            int submesh = (int)block.GetTexture(face);
 
             mesh.AddSquare(v0, v1, v2, v3, submesh);
 
