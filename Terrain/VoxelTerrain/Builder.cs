@@ -11,7 +11,8 @@ namespace UnityUtilities.Terrain
             int chunkWidthInBlocks,
             float blockSize,
             Material[] materials,
-            int groundLayer
+            int groundLayer,
+            float baseFrequency
         )
         {
             string name = FormattableString.Invariant($"Chunk_x{chunkIndex.x}_z{chunkIndex.z}");
@@ -21,7 +22,8 @@ namespace UnityUtilities.Terrain
                 Chunk c = Generator.GenerateChunkWithBorder(
                     chunkIndex,
                     chunkWidthInBlocks,
-                    blockSize
+                    blockSize,
+                    baseFrequency
                 );
                 Mesh m = BuildChunkMesh(c, blockSize);
 

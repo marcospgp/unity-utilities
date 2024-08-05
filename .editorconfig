@@ -242,6 +242,9 @@ dotnet_diagnostic.S101.severity = none
 # Sections of code should not be commented out
 # https://rules.sonarsource.com/csharp/RSPEC-125/
 dotnet_diagnostic.S125.severity = none
+# S1244: Do not check floating point inequality with exact values, use a range instead.
+# Not always correct.
+dotnet_diagnostic.S1244.severity = none
 # S1481: Remove the unused local variable 'variable name here'.
 # Conflicts with "Expression value is never used (IDE0058)".
 # We want to be able to ignore returned values using "_".
@@ -249,6 +252,9 @@ dotnet_diagnostic.S1481.severity = none
 # S1854: Unused assignments should be removed
 # We want to be able to ignore returned values using "_".
 dotnet_diagnostic.S1854.severity = none
+# S3168: "async" methods should not return "void"
+# Same as VSTHRD100.
+dotnet_diagnostic.S3168.severity = none
 # S3241: Change return type to 'void'; not a single caller uses the returned
 # value.
 # Redundant with "Remove unnecessary expression value (IDE0058)".
@@ -258,10 +264,17 @@ dotnet_diagnostic.S3241.severity = none
 # No reason to disallow readonly public reference fields.
 dotnet_diagnostic.S3887.severity = none
 
+# VSTHRD100: Avoid "async void" methods, because any exceptions not handled by
+# the method will crash the process.
+# Sometimes we want that, such as with Unity events like Start() and Update().
+dotnet_diagnostic.VSTHRD100.severity = none
 # VSTHRD111 Use .ConfigureAwait(bool)
 dotnet_diagnostic.VSTHRD111.severity = none
 # VSTHRD200 Use Async suffix for async methods
 dotnet_diagnostic.VSTHRD200.severity = none
+# VSTHRD003: Avoid awaiting or returning a Task representing work that was not
+# started within your context...
+dotnet_diagnostic.VSTHRD003.severity = none
 
 # UNT0006 Incorrect message signature
 # Incompatible with async code in Unity events such as Start() or Update().

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
-    public class VoxelTerrain : MonoBehaviour
+    public sealed class VoxelTerrain : MonoBehaviour, IDisposable
     {
         public const float BLOCK_SIZE = 1f;
         private const int CHUNK_WIDTH_IN_BLOCKS = 16;
@@ -32,13 +33,31 @@ namespace UnityUtilities.Terrain
         [SerializeField, LayerSelect]
         private int groundLayer;
 
+        [Header("Terrain generation parameters")]
+        [SerializeField]
+        private GenerationParameters generationParameters = new();
+
+        private GenerationParameters lastGenerationParameters;
+
         private Material[] materials;
+
+        private CancellationTokenSource cancelTokenSource = new();
+        private Task task;
 
         public static event EventHandler<Chunk> OnFirstChunk;
 
-        // Unity event.
-        public async Task Start()
+        public void Dispose()
         {
+            this.cancelTokenSource.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        // Unity event.
+        public async void Start()
+        {
+            // Cache generation parameters.
+            this.lastGenerationParameters.CopyFrom(this.generationParameters);
+
             // Turn terrain textures into materials.
             this.materials = new Material[this.textures.Length];
 
@@ -50,31 +69,61 @@ namespace UnityUtilities.Terrain
                 };
             }
 
-            int viewDistanceInChunks = (int)(
-                this.viewDistance / (CHUNK_WIDTH_IN_BLOCKS * BLOCK_SIZE)
-            );
+            this.task = this.BuildTerrain();
 
-            foreach ((int x, int z) in Spiral(viewDistanceInChunks))
+            try
             {
-                VoxelTerrain.chunks.Add(
-                    (x, z),
-                    await Builder.BuildChunk(
-                        (x, z),
-                        CHUNK_WIDTH_IN_BLOCKS,
-                        BLOCK_SIZE,
-                        this.materials,
-                        this.groundLayer
-                    )
-                );
+                await this.task;
+            }
+            catch (OperationCanceledException)
+            {
+                // Suppress.
+            }
+        }
 
-                if (x == 0 && z == 0)
+#if UNITY_EDITOR
+        // Unity event.
+        public async void Update()
+        {
+            if (!this.generationParameters.IsEqualTo(this.lastGenerationParameters))
+            {
+                this.lastGenerationParameters.CopyFrom(this.generationParameters);
+
+                this.cancelTokenSource.Cancel();
+
+                // Wait for terrain to stop generating.
+                try
                 {
-                    VoxelTerrain.OnFirstChunk(sender: null, chunks[(0, 0)].chunk);
-                    // Flag for garbage collection.
-                    VoxelTerrain.OnFirstChunk = null;
+                    await this.task;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Suppress.
+                }
+
+                this.cancelTokenSource.Dispose();
+                this.cancelTokenSource = new CancellationTokenSource();
+
+                foreach ((_, GameObject chunk) in chunks.Values)
+                {
+                    Destroy(chunk);
+                }
+
+                chunks.Clear();
+
+                this.task = this.BuildTerrain();
+
+                try
+                {
+                    await this.task;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Suppress.
                 }
             }
         }
+#endif
 
         // Enumerates coordinates for a spiral.
         private static IEnumerable<(int, int)> Spiral(int radius)
@@ -126,6 +175,35 @@ namespace UnityUtilities.Terrain
                 if (IsWithinRadius(x, z))
                 {
                     yield return (x, z);
+                }
+            }
+        }
+
+        private async Task BuildTerrain()
+        {
+            int viewDistanceInChunks = (int)(
+                this.viewDistance / (CHUNK_WIDTH_IN_BLOCKS * BLOCK_SIZE)
+            );
+
+            foreach ((int x, int z) in Spiral(viewDistanceInChunks))
+            {
+                this.cancelTokenSource.Token.ThrowIfCancellationRequested();
+
+                VoxelTerrain.chunks.Add(
+                    (x, z),
+                    await Builder.BuildChunk(
+                        (x, z),
+                        CHUNK_WIDTH_IN_BLOCKS,
+                        BLOCK_SIZE,
+                        this.materials,
+                        this.groundLayer,
+                        this.baseFrequency
+                    )
+                );
+
+                if (x == 0 && z == 0)
+                {
+                    VoxelTerrain.OnFirstChunk(sender: null, chunks[(0, 0)].chunk);
                 }
             }
         }

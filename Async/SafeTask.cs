@@ -98,21 +98,6 @@ namespace UnityUtilities
         [UnityEditor.InitializeOnLoadMethod]
         private static void OnLoadCallback()
         {
-            // Prevent unobserved task exceptions from being swallowed.
-            // This happens when:
-            //  * A Task that isn't awaited fails;
-            //  * A Task chained with `.ContinueWith()` fails and exceptions are
-            //    not explicitly handled in the function passed to it.
-            //
-            // This event handler works for both Tasks and SafeTasks.
-            //
-            // Note this only seems to run when garbage collection happens (such
-            // as after script reloading in the Unity editor).
-            // Calling `System.GC.Collect()` after the exception caused
-            // exceptions to be logged right away.
-            TaskScheduler.UnobservedTaskException += (_, e) =>
-                UnityEngine.Debug.LogException(e.Exception);
-
             // Cancel pending `SafeTask.Run()` calls when exiting play or edit
             // mode.
             UnityEditor.EditorApplication.playModeStateChanged += (change) =>
@@ -127,6 +112,21 @@ namespace UnityUtilities
                     SafeTask.cancellationTokenSource = new CancellationTokenSource();
                 }
             };
+
+            // Prevent unobserved task exceptions from being swallowed.
+            // This happens when:
+            //  * A Task that isn't awaited fails;
+            //  * A Task chained with `.ContinueWith()` fails and exceptions are
+            //    not explicitly handled in the function passed to it.
+            //
+            // This event handler works for both Tasks and SafeTasks.
+            //
+            // Note this only seems to run when garbage collection happens (such
+            // as after script reloading in the Unity editor).
+            // Calling `System.GC.Collect()` after the exception caused
+            // exceptions to be logged right away.
+            TaskScheduler.UnobservedTaskException += (_, e) =>
+                UnityEngine.Debug.LogException(e.Exception);
         }
 #endif
     }
