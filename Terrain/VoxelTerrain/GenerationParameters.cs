@@ -7,6 +7,7 @@ namespace UnityUtilities.Terrain
     public class GenerationParameters
     {
         public float baseFrequency = 0.008f;
+        public int baseOctaves = 3;
 
         public void CopyFrom(GenerationParameters other)
         {

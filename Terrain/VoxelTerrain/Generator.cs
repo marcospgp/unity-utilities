@@ -18,7 +18,7 @@ namespace UnityUtilities.Terrain
             (int x, int z) chunkIndex,
             int chunkWidthInBlocks,
             float blockSize,
-            float baseFrequency
+            GenerationParameters generationParameters
         )
         {
             // Account for border.
@@ -34,7 +34,7 @@ namespace UnityUtilities.Terrain
                     float globalX = ((chunkIndex.x * chunkWidthInBlocks) + x - 1) * blockSize;
                     float globalZ = ((chunkIndex.z * chunkWidthInBlocks) + z - 1) * blockSize;
 
-                    float groundHeight = GetGroundHeight(globalX, globalZ, baseFrequency);
+                    float groundHeight = GetGroundHeight(globalX, globalZ, generationParameters);
 
                     int groundHeightInBlocks = (int)(groundHeight / blockSize);
 
@@ -62,14 +62,18 @@ namespace UnityUtilities.Terrain
             return chunk;
         }
 
-        private static float GetGroundHeight(float x, float z, float baseFrequency)
+        private static float GetGroundHeight(
+            float x,
+            float z,
+            GenerationParameters generationParameters
+        )
         {
             float landNoise = PerlinNoise.Get(
                 x,
                 z,
                 seed: "base",
-                baseFrequency: baseFrequency,
-                numberOfOctaves: 3
+                baseFrequency: generationParameters.baseFrequency,
+                numberOfOctaves: generationParameters.baseOctaves
             );
 
             // Increase proportion of land.

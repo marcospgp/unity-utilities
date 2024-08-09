@@ -12,7 +12,7 @@ namespace UnityUtilities.Terrain
             float blockSize,
             Material[] materials,
             int groundLayer,
-            float baseFrequency
+            GenerationParameters generationParameters
         )
         {
             string name = FormattableString.Invariant($"Chunk_x{chunkIndex.x}_z{chunkIndex.z}");
@@ -23,7 +23,7 @@ namespace UnityUtilities.Terrain
                     chunkIndex,
                     chunkWidthInBlocks,
                     blockSize,
-                    baseFrequency
+                    generationParameters
                 );
                 Mesh m = BuildChunkMesh(c, blockSize);
 

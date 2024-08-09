@@ -20,6 +20,8 @@ namespace UnityUtilities.Terrain
             (Chunk chunk, GameObject chunkGameObject)
         > chunks = new();
 
+        private readonly GenerationParameters lastGenerationParameters = new();
+
         [SerializeField]
         [Tooltip("Terrain textures, in the same order as they appear in BlockTexture.")]
         private Texture2D[] textures;
@@ -36,8 +38,6 @@ namespace UnityUtilities.Terrain
         [Header("Terrain generation parameters")]
         [SerializeField]
         private GenerationParameters generationParameters = new();
-
-        private GenerationParameters lastGenerationParameters;
 
         private Material[] materials;
 
@@ -197,7 +197,7 @@ namespace UnityUtilities.Terrain
                         BLOCK_SIZE,
                         this.materials,
                         this.groundLayer,
-                        this.baseFrequency
+                        this.generationParameters
                     )
                 );
 
