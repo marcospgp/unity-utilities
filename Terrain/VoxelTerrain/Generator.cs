@@ -73,15 +73,18 @@ namespace UnityUtilities.Terrain
                 z,
                 seed: "base",
                 baseFrequency: generationParameters.baseFrequency,
-                numberOfOctaves: generationParameters.baseOctaves
+                numberOfOctaves: generationParameters.baseOctaves,
+                lacunarity: generationParameters.baseLacunarity,
+                persistence: generationParameters.basePersistence
             );
 
-            // Increase proportion of land.
-            landNoise = MathF.Pow(landNoise, 0.8f);
+            // Controls land to ocean ratio.
+            // 1 = small islands.
+            landNoise = MathF.Pow(landNoise, generationParameters.baseExponent);
 
             // Remap into [-0.5, 0.5] for sigmoid.
             landNoise = (landNoise * 2f) - 1f;
-            landNoise = Sigmoid(landNoise, 10);
+            landNoise = Sigmoid(landNoise, generationParameters.baseSigmoidSlope);
 
             float landHeight = landNoise * LAND_HEIGHT;
 

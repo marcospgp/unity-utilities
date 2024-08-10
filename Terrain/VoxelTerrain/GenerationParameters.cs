@@ -8,6 +8,10 @@ namespace UnityUtilities.Terrain
     {
         public float baseFrequency = 0.008f;
         public int baseOctaves = 3;
+        public float baseLacunarity = 2f;
+        public float basePersistence = 0.5f;
+        public float baseExponent = 0.8f;
+        public float baseSigmoidSlope = 10f;
 
         public void CopyFrom(GenerationParameters other)
         {
