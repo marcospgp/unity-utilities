@@ -13,6 +13,21 @@ namespace UnityUtilities.Terrain
         public float baseExponent = 0.8f;
         public float baseSigmoidSlope = 10f;
 
+        public float mountainFrequency = 0.008f;
+        public int mountainOctaves = 3;
+        public float mountainLacunarity = 2f;
+        public float mountainPersistence = 0.5f;
+        public float mountainNoiseFloor = 0.5f;
+        public float mountainExponent = 1f;
+        public bool mountainSigmoid = false;
+        public float mountainSigmoidSlope = 10f;
+        public float mountainHeight = 64f;
+        public float mountainStep = 1f;
+
+        /// <summary>
+        /// Allows reusing the same instance, to avoid generating garbage by
+        /// allocating new instances repeatedly.
+        /// </summary>
         public void CopyFrom(GenerationParameters other)
         {
             foreach (
