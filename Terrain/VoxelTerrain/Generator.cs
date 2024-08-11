@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
@@ -94,34 +93,41 @@ namespace UnityUtilities.Terrain
             // Mountain terrain
             //
 
-            float mountainNoise = PerlinNoise.Get(
-                x,
-                z,
-                seed: "mountain",
-                baseFrequency: genParams.mountainFrequency,
-                numberOfOctaves: genParams.mountainOctaves,
-                lacunarity: genParams.mountainLacunarity,
-                persistence: genParams.mountainPersistence
-            );
+            float mountainHeight = 0f;
 
-            mountainNoise =
-                (mountainNoise - genParams.mountainNoiseFloor)
-                / (genParams.mountainNoiseCeiling - genParams.mountainNoiseFloor);
-            mountainNoise = MathF.Max(mountainNoise, 0f);
-            mountainNoise = MathF.Min(mountainNoise, 1f);
-
-            mountainNoise = MathF.Pow(mountainNoise, genParams.mountainExponent);
-
-            if (genParams.mountainSigmoid)
+            if (genParams.mountainsEnabled)
             {
-                // Remap into [-0.5, 0.5] for sigmoid.
-                mountainNoise = (mountainNoise * 2f) - 1f;
-                mountainNoise = Sigmoid(mountainNoise, genParams.mountainSigmoidSlope);
+                float mountainNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "mountain",
+                    baseFrequency: genParams.mountainFrequency,
+                    numberOfOctaves: genParams.mountainOctaves,
+                    lacunarity: genParams.mountainLacunarity,
+                    persistence: genParams.mountainPersistence
+                );
+
+                mountainNoise =
+                    (mountainNoise - genParams.mountainNoiseFloor)
+                    / (genParams.mountainNoiseCeiling - genParams.mountainNoiseFloor);
+                mountainNoise = MathF.Max(mountainNoise, 0f);
+                mountainNoise = MathF.Min(mountainNoise, 1f);
+
+                mountainNoise = MathF.Pow(mountainNoise, genParams.mountainExponent);
+
+                if (genParams.mountainSigmoid)
+                {
+                    // Remap into [-0.5, 0.5] for sigmoid.
+                    mountainNoise = (mountainNoise * 2f) - 1f;
+                    mountainNoise = Sigmoid(mountainNoise, genParams.mountainSigmoidSlope);
+                }
+
+                // Multiply by landNoise again to avoid underwater mountains.
+                mountainHeight =
+                    mountainNoise
+                    * genParams.mountainHeight
+                    * MathF.Pow(landNoise, genParams.mountainInlandExponent);
             }
-
-            mountainNoise *= landNoise;
-
-            float mountainHeight = mountainNoise * genParams.mountainHeight;
 
             //
             // Mountain filter
@@ -152,7 +158,7 @@ namespace UnityUtilities.Terrain
 
                 if (genParams.mountainFilterSigmoid)
                 {
-                    // Remap into [-0.5, 0.5] for sigmoid.
+                    // Remap into [-1, 1] for sigmoid.
                     mountainFilterNoise = (mountainFilterNoise * 2f) - 1f;
                     mountainFilterNoise = Sigmoid(
                         mountainFilterNoise,
@@ -161,7 +167,9 @@ namespace UnityUtilities.Terrain
                 }
 
                 // Multiply by landNoise again to avoid underwater mountains.
-                mountainHeight *= mountainFilterNoise * landNoise;
+                mountainHeight *=
+                    mountainFilterNoise
+                    * MathF.Pow(landNoise, genParams.mountainFilterInlandExponent);
             }
 
             groundHeight += mountainHeight;
@@ -197,7 +205,52 @@ namespace UnityUtilities.Terrain
                     hillNoise = Sigmoid(hillNoise, genParams.hillSigmoidSlope);
                 }
 
-                groundHeight += hillNoise * landNoise * genParams.hillHeight;
+                groundHeight +=
+                    hillNoise
+                    * MathF.Pow(landNoise, genParams.hillInlandExponent)
+                    * genParams.hillHeight;
+            }
+
+            //
+            // Rivers
+            //
+
+            if (genParams.riversEnabled)
+            {
+                float riverNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "mountain",
+                    baseFrequency: genParams.riverFrequency,
+                    numberOfOctaves: genParams.riverOctaves,
+                    lacunarity: genParams.riverLacunarity,
+                    persistence: genParams.riverPersistence
+                );
+
+                // Use absolute value trick to create river "lines".
+                riverNoise = MathF.Abs(riverNoise - 0.5f) * 2f;
+
+                riverNoise =
+                    (riverNoise - genParams.riverNoiseFloor)
+                    / (genParams.riverNoiseCeiling - genParams.riverNoiseFloor);
+                riverNoise = MathF.Max(riverNoise, 0f);
+                riverNoise = MathF.Min(riverNoise, 1f);
+
+                riverNoise = MathF.Pow(riverNoise, genParams.riverExponent);
+
+                if (genParams.riverSigmoid)
+                {
+                    // Remap into [-0.5, 0.5] for sigmoid.
+                    riverNoise = (riverNoise * 2f) - 1f;
+                    riverNoise = Sigmoid(riverNoise, genParams.riverSigmoidSlope);
+                }
+
+                float heightAtMaxDepth = WATER_LEVEL - genParams.riverMaxDepth;
+
+                float delta = groundHeight - heightAtMaxDepth;
+
+                groundHeight -=
+                    delta * riverNoise * MathF.Pow(landNoise, genParams.riverInlandExponent);
             }
 
             return groundHeight;

@@ -16,6 +16,7 @@ namespace UnityUtilities.Terrain
         public float baseSigmoidSlope = 10f;
 
         [Header("Mountain")]
+        public bool mountainsEnabled = false;
         public float mountainFrequency = 0.008f;
         public int mountainOctaves = 3;
         public float mountainLacunarity = 2f;
@@ -25,6 +26,7 @@ namespace UnityUtilities.Terrain
         public float mountainExponent = 1f;
         public bool mountainSigmoid = false;
         public float mountainSigmoidSlope = 10f;
+        public float mountainInlandExponent = 1f;
         public float mountainHeight = 64f;
 
         [Header("Mountain filter")]
@@ -38,6 +40,7 @@ namespace UnityUtilities.Terrain
         public float mountainFilterExponent = 1f;
         public bool mountainFilterSigmoid = false;
         public float mountainFilterSigmoidSlope = 10f;
+        public float mountainFilterInlandExponent = 1f;
 
         [Header("Hills")]
         public bool hillsEnabled = false;
@@ -51,6 +54,21 @@ namespace UnityUtilities.Terrain
         public bool hillSigmoid = false;
         public float hillSigmoidSlope = 10f;
         public float hillHeight = 32f;
+        public float hillInlandExponent = 1f;
+
+        [Header("Rivers")]
+        public bool riversEnabled = false;
+        public float riverFrequency = 0.008f;
+        public int riverOctaves = 3;
+        public float riverLacunarity = 2f;
+        public float riverPersistence = 0.5f;
+        public float riverNoiseFloor = 0f;
+        public float riverNoiseCeiling = 1f;
+        public float riverExponent = 1f;
+        public bool riverSigmoid = false;
+        public float riverSigmoidSlope = 10f;
+        public float riverInlandExponent = 1f;
+        public float riverMaxDepth = 16f;
 
         /// <summary>
         /// Allows reusing the same instance, to avoid generating garbage by
