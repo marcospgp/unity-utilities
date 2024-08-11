@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
@@ -64,6 +65,12 @@ namespace UnityUtilities.Terrain
 
         private static float GetGroundHeight(float x, float z, GenerationParameters genParams)
         {
+            float groundHeight = BASE_HEIGHT;
+
+            //
+            // Base terrain (land vs ocean)
+            //
+
             float landNoise = PerlinNoise.Get(
                 x,
                 z,
@@ -81,9 +88,11 @@ namespace UnityUtilities.Terrain
             landNoise = (landNoise * 2f) - 1f;
             landNoise = Sigmoid(landNoise, genParams.baseSigmoidSlope);
 
-            float landHeight = landNoise * LAND_HEIGHT;
+            groundHeight += landNoise * LAND_HEIGHT;
 
-            // Mountains
+            //
+            // Mountain terrain
+            //
 
             float mountainNoise = PerlinNoise.Get(
                 x,
@@ -96,8 +105,10 @@ namespace UnityUtilities.Terrain
             );
 
             mountainNoise =
-                MathF.Max(mountainNoise - genParams.mountainNoiseFloor, 0f)
-                / genParams.mountainNoiseFloor;
+                (mountainNoise - genParams.mountainNoiseFloor)
+                / (genParams.mountainNoiseCeiling - genParams.mountainNoiseFloor);
+            mountainNoise = MathF.Max(mountainNoise, 0f);
+            mountainNoise = MathF.Min(mountainNoise, 1f);
 
             mountainNoise = MathF.Pow(mountainNoise, genParams.mountainExponent);
 
@@ -112,15 +123,86 @@ namespace UnityUtilities.Terrain
 
             float mountainHeight = mountainNoise * genParams.mountainHeight;
 
-            // A mountain step of 1 avoids isolated 1-block-high mountains.
-            if (mountainHeight < genParams.mountainStep)
+            //
+            // Mountain filter
+            //
+
+            if (genParams.mountainFilterEnabled)
             {
-                mountainHeight = 0;
+                float mountainFilterNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "mountain",
+                    baseFrequency: genParams.mountainFilterFrequency,
+                    numberOfOctaves: genParams.mountainFilterOctaves,
+                    lacunarity: genParams.mountainFilterLacunarity,
+                    persistence: genParams.mountainFilterPersistence
+                );
+
+                mountainFilterNoise =
+                    (mountainFilterNoise - genParams.mountainFilterNoiseFloor)
+                    / (genParams.mountainFilterNoiseCeiling - genParams.mountainFilterNoiseFloor);
+                mountainFilterNoise = MathF.Max(mountainFilterNoise, 0f);
+                mountainFilterNoise = MathF.Min(mountainFilterNoise, 1f);
+
+                mountainFilterNoise = MathF.Pow(
+                    mountainFilterNoise,
+                    genParams.mountainFilterExponent
+                );
+
+                if (genParams.mountainFilterSigmoid)
+                {
+                    // Remap into [-0.5, 0.5] for sigmoid.
+                    mountainFilterNoise = (mountainFilterNoise * 2f) - 1f;
+                    mountainFilterNoise = Sigmoid(
+                        mountainFilterNoise,
+                        genParams.mountainFilterSigmoidSlope
+                    );
+                }
+
+                // Multiply by landNoise again to avoid underwater mountains.
+                mountainHeight *= mountainFilterNoise * landNoise;
             }
 
-            return BASE_HEIGHT + landHeight + mountainHeight;
+            groundHeight += mountainHeight;
+
+            //
+            // Hills
+            //
+
+            if (genParams.hillsEnabled)
+            {
+                float hillNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "mountain",
+                    baseFrequency: genParams.hillFrequency,
+                    numberOfOctaves: genParams.hillOctaves,
+                    lacunarity: genParams.hillLacunarity,
+                    persistence: genParams.hillPersistence
+                );
+
+                hillNoise =
+                    (hillNoise - genParams.hillNoiseFloor)
+                    / (genParams.hillNoiseCeiling - genParams.hillNoiseFloor);
+                hillNoise = MathF.Max(hillNoise, 0f);
+                hillNoise = MathF.Min(hillNoise, 1f);
+
+                hillNoise = MathF.Pow(hillNoise, genParams.hillExponent);
+
+                if (genParams.hillSigmoid)
+                {
+                    // Remap into [-0.5, 0.5] for sigmoid.
+                    hillNoise = (hillNoise * 2f) - 1f;
+                    hillNoise = Sigmoid(hillNoise, genParams.hillSigmoidSlope);
+                }
+
+                groundHeight += hillNoise * landNoise * genParams.hillHeight;
+            }
+
+            return groundHeight;
         }
 
-        private static float Sigmoid(float x, float k) => 1f / (1f + MathF.Exp(-k * x));
+        private static float Sigmoid(float x, float slope) => 1f / (1f + MathF.Exp(-slope * x));
     }
 }
