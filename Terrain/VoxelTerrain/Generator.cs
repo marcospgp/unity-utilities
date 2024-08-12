@@ -166,7 +166,6 @@ namespace UnityUtilities.Terrain
                     );
                 }
 
-                // Multiply by landNoise again to avoid underwater mountains.
                 mountainHeight *=
                     mountainFilterNoise
                     * MathF.Pow(landNoise, genParams.mountainFilterInlandExponent);
