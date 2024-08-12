@@ -59,12 +59,28 @@ namespace UnityUtilities.Terrain
         [Header("Rivers")]
         public bool riversEnabled = false;
         public float riverFrequency = 0.008f;
+        public int riverOctaves = 1;
+        public float riverLacunarity = 2f;
+        public float riverPersistence = 0.5f;
         public float riverNoiseFloor = 0f;
         public float riverNoiseCeiling = 1f;
         public float riverExponent = 1f;
         public bool riverSigmoid = false;
         public float riverSigmoidSlope = 10f;
         public float riverMaxDepth = 16f;
+
+        [Header("River noise")]
+        public bool riverNoiseEnabled = false;
+        public float riverNoiseFrequency = 0.008f;
+        public int riverNoiseOctaves = 3;
+        public float riverNoiseLacunarity = 2f;
+        public float riverNoisePersistence = 0.5f;
+        public float riverNoiseNoiseFloor = 0f;
+        public float riverNoiseNoiseCeiling = 1f;
+        public float riverNoiseExponent = 1f;
+        public bool riverNoiseSigmoid = false;
+        public float riverNoiseSigmoidSlope = 10f;
+        public float riverNoiseMultiplier = 1f;
 
         /// <summary>
         /// Allows reusing the same instance, to avoid generating garbage by

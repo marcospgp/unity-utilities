@@ -6,7 +6,7 @@ namespace UnityUtilities.Terrain
     {
         private const float BASE_HEIGHT = 64f; // Ocean floor height.
         private const float LAND_HEIGHT = 64f;
-        private const float WATER_LEVEL = BASE_HEIGHT + LAND_HEIGHT - 3.2f;
+        private const float WATER_LEVEL = BASE_HEIGHT + LAND_HEIGHT - 1.2f;
 
         /// <summary>
         /// Generating a chunk with a 1-block border is useful for building a
@@ -214,14 +214,18 @@ namespace UnityUtilities.Terrain
             // Rivers
             //
 
+            float riverNoise = 0f;
+
             if (genParams.riversEnabled)
             {
-                float riverNoise = PerlinNoise.Get(
+                riverNoise = PerlinNoise.Get(
                     x,
                     z,
                     seed: "river",
                     baseFrequency: genParams.riverFrequency,
-                    numberOfOctaves: 1
+                    numberOfOctaves: genParams.riverOctaves,
+                    lacunarity: genParams.riverLacunarity,
+                    persistence: genParams.riverPersistence
                 );
 
                 // Use absolute function to create river "lines".
@@ -250,6 +254,40 @@ namespace UnityUtilities.Terrain
                 {
                     groundHeight -= delta;
                 }
+            }
+
+            //
+            // River noise
+            //
+
+            if (genParams.riverNoiseEnabled)
+            {
+                float riverNoiseNoise = PerlinNoise.Get(
+                    x,
+                    z,
+                    seed: "river noise",
+                    baseFrequency: genParams.riverNoiseFrequency,
+                    numberOfOctaves: genParams.riverNoiseOctaves,
+                    lacunarity: genParams.riverNoiseLacunarity,
+                    persistence: genParams.riverNoisePersistence
+                );
+
+                riverNoiseNoise =
+                    (riverNoiseNoise - genParams.riverNoiseNoiseFloor)
+                    / (genParams.riverNoiseNoiseCeiling - genParams.riverNoiseNoiseFloor);
+                riverNoiseNoise = MathF.Max(riverNoiseNoise, 0f);
+                riverNoiseNoise = MathF.Min(riverNoiseNoise, 1f);
+
+                riverNoiseNoise = MathF.Pow(riverNoiseNoise, genParams.riverNoiseExponent);
+
+                if (genParams.riverNoiseSigmoid)
+                {
+                    // Remap into [-1, 1] for sigmoid.
+                    riverNoiseNoise = (riverNoiseNoise * 2f) - 1f;
+                    riverNoiseNoise = Sigmoid(riverNoiseNoise, genParams.riverNoiseSigmoidSlope);
+                }
+
+                groundHeight += riverNoiseNoise * genParams.riverNoiseMultiplier * riverNoise;
             }
 
             return groundHeight;
