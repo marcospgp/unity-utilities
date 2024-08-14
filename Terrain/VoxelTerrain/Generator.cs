@@ -4,10 +4,6 @@ namespace UnityUtilities.Terrain
 {
     public static class Generator
     {
-        private const float BASE_HEIGHT = 64f; // Ocean floor height.
-        private const float LAND_HEIGHT = 64f;
-        private const float WATER_LEVEL = BASE_HEIGHT + LAND_HEIGHT - 1.2f;
-
         /// <summary>
         /// Generating a chunk with a 1-block border is useful for building a
         /// chunk's mesh, as we check neighboring blocks when deciding whether
@@ -18,9 +14,11 @@ namespace UnityUtilities.Terrain
             (int x, int z) chunkIndex,
             int chunkWidthInBlocks,
             float blockSize,
-            GenerationParameters generationParameters
+            GenerationParameters genParams
         )
         {
+            float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude;
+
             // Account for border.
             int w = chunkWidthInBlocks + 2;
 
@@ -34,7 +32,7 @@ namespace UnityUtilities.Terrain
                     float globalX = ((chunkIndex.x * chunkWidthInBlocks) + x - 1) * blockSize;
                     float globalZ = ((chunkIndex.z * chunkWidthInBlocks) + z - 1) * blockSize;
 
-                    float groundHeight = GetGroundHeight(globalX, globalZ, generationParameters);
+                    float groundHeight = GetGroundHeight(globalX, globalZ, genParams);
 
                     int groundHeightInBlocks = (int)(groundHeight / blockSize);
 
@@ -44,7 +42,7 @@ namespace UnityUtilities.Terrain
 
                     column[^1] = Block.Grass;
 
-                    int waterLevelInBlocks = (int)(MathF.Ceiling(WATER_LEVEL) / blockSize) + 1;
+                    int waterLevelInBlocks = (int)(MathF.Ceiling(waterLevel) / blockSize) + 1;
 
                     if (groundHeightInBlocks >= waterLevelInBlocks)
                     {
@@ -64,235 +62,41 @@ namespace UnityUtilities.Terrain
 
         private static float GetGroundHeight(float x, float z, GenerationParameters genParams)
         {
-            float groundHeight = BASE_HEIGHT;
+            float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude;
 
-            //
+            float groundHeight = genParams.baseHeight;
+
             // Base terrain (land vs ocean)
-            //
+            groundHeight += genParams.baseTerrain.Get(x, z);
 
-            float landNoise = PerlinNoise.Get(
-                x,
-                z,
-                seed: "base",
-                baseFrequency: genParams.baseFrequency,
-                numberOfOctaves: genParams.baseOctaves,
-                lacunarity: genParams.baseLacunarity,
-                persistence: genParams.basePersistence
-            );
+            float inlandFactor =
+                groundHeight / (genParams.baseHeight + genParams.baseTerrain.magnitude);
 
-            // baseExponent controls land to ocean ratio.
-            landNoise = MathF.Pow(landNoise, genParams.baseExponent);
+            // Mountains
+            groundHeight +=
+                genParams.mountains.Get(x, z)
+                * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
+                * genParams.mountainFilter.Get(x, z);
 
-            // Remap into [-1, 1] for sigmoid.
-            landNoise = (landNoise * 2f) - 1f;
-            landNoise = Sigmoid(landNoise, genParams.baseSigmoidSlope);
-
-            groundHeight += landNoise * LAND_HEIGHT;
-
-            //
-            // Mountain terrain
-            //
-
-            float mountainHeight = 0f;
-
-            if (genParams.mountainsEnabled)
-            {
-                float mountainNoise = PerlinNoise.Get(
-                    x,
-                    z,
-                    seed: "mountain",
-                    baseFrequency: genParams.mountainFrequency,
-                    numberOfOctaves: genParams.mountainOctaves,
-                    lacunarity: genParams.mountainLacunarity,
-                    persistence: genParams.mountainPersistence
-                );
-
-                mountainNoise =
-                    (mountainNoise - genParams.mountainNoiseFloor)
-                    / (genParams.mountainNoiseCeiling - genParams.mountainNoiseFloor);
-                mountainNoise = MathF.Max(mountainNoise, 0f);
-                mountainNoise = MathF.Min(mountainNoise, 1f);
-
-                mountainNoise = MathF.Pow(mountainNoise, genParams.mountainExponent);
-
-                if (genParams.mountainSigmoid)
-                {
-                    // Remap into [-1, 1] for sigmoid.
-                    mountainNoise = (mountainNoise * 2f) - 1f;
-                    mountainNoise = Sigmoid(mountainNoise, genParams.mountainSigmoidSlope);
-                }
-
-                // Multiply by landNoise again to avoid underwater mountains.
-                mountainHeight =
-                    mountainNoise
-                    * genParams.mountainHeight
-                    * MathF.Pow(landNoise, genParams.mountainInlandExponent);
-            }
-
-            //
-            // Mountain filter
-            //
-
-            if (genParams.mountainFilterEnabled)
-            {
-                float mountainFilterNoise = PerlinNoise.Get(
-                    x,
-                    z,
-                    seed: "mountain filter",
-                    baseFrequency: genParams.mountainFilterFrequency,
-                    numberOfOctaves: genParams.mountainFilterOctaves,
-                    lacunarity: genParams.mountainFilterLacunarity,
-                    persistence: genParams.mountainFilterPersistence
-                );
-
-                mountainFilterNoise =
-                    (mountainFilterNoise - genParams.mountainFilterNoiseFloor)
-                    / (genParams.mountainFilterNoiseCeiling - genParams.mountainFilterNoiseFloor);
-                mountainFilterNoise = MathF.Max(mountainFilterNoise, 0f);
-                mountainFilterNoise = MathF.Min(mountainFilterNoise, 1f);
-
-                mountainFilterNoise = MathF.Pow(
-                    mountainFilterNoise,
-                    genParams.mountainFilterExponent
-                );
-
-                if (genParams.mountainFilterSigmoid)
-                {
-                    // Remap into [-1, 1] for sigmoid.
-                    mountainFilterNoise = (mountainFilterNoise * 2f) - 1f;
-                    mountainFilterNoise = Sigmoid(
-                        mountainFilterNoise,
-                        genParams.mountainFilterSigmoidSlope
-                    );
-                }
-
-                mountainHeight *=
-                    mountainFilterNoise
-                    * MathF.Pow(landNoise, genParams.mountainFilterInlandExponent);
-            }
-
-            groundHeight += mountainHeight;
-
-            //
             // Hills
-            //
+            groundHeight +=
+                genParams.hills.Get(x, z) * MathF.Pow(inlandFactor, genParams.hillInlandExponent);
 
-            if (genParams.hillsEnabled)
-            {
-                float hillNoise = PerlinNoise.Get(
-                    x,
-                    z,
-                    seed: "hill",
-                    baseFrequency: genParams.hillFrequency,
-                    numberOfOctaves: genParams.hillOctaves,
-                    lacunarity: genParams.hillLacunarity,
-                    persistence: genParams.hillPersistence
-                );
-
-                hillNoise =
-                    (hillNoise - genParams.hillNoiseFloor)
-                    / (genParams.hillNoiseCeiling - genParams.hillNoiseFloor);
-                hillNoise = MathF.Max(hillNoise, 0f);
-                hillNoise = MathF.Min(hillNoise, 1f);
-
-                hillNoise = MathF.Pow(hillNoise, genParams.hillExponent);
-
-                if (genParams.hillSigmoid)
-                {
-                    // Remap into [-1, 1] for sigmoid.
-                    hillNoise = (hillNoise * 2f) - 1f;
-                    hillNoise = Sigmoid(hillNoise, genParams.hillSigmoidSlope);
-                }
-
-                groundHeight +=
-                    hillNoise
-                    * MathF.Pow(landNoise, genParams.hillInlandExponent)
-                    * genParams.hillHeight;
-            }
-
-            //
             // Rivers
-            //
+            float riverNoise = genParams.rivers.Get(x, z);
+            float maxDepth = genParams.rivers.magnitude;
+            float heightAtMaxDepth = waterLevel - maxDepth;
+            float delta = (groundHeight - heightAtMaxDepth) * riverNoise;
 
-            float riverNoise = 0f;
-
-            if (genParams.riversEnabled)
+            if (delta > 0)
             {
-                riverNoise = PerlinNoise.Get(
-                    x,
-                    z,
-                    seed: "river",
-                    baseFrequency: genParams.riverFrequency,
-                    numberOfOctaves: genParams.riverOctaves,
-                    lacunarity: genParams.riverLacunarity,
-                    persistence: genParams.riverPersistence
-                );
-
-                // Use absolute function to create river "lines".
-                riverNoise = 1f - (MathF.Abs(riverNoise - 0.5f) * 2f);
-
-                riverNoise =
-                    (riverNoise - genParams.riverNoiseFloor)
-                    / (genParams.riverNoiseCeiling - genParams.riverNoiseFloor);
-                riverNoise = MathF.Max(riverNoise, 0f);
-                riverNoise = MathF.Min(riverNoise, 1f);
-
-                riverNoise = MathF.Pow(riverNoise, genParams.riverExponent);
-
-                if (genParams.riverSigmoid)
-                {
-                    // Remap into [-1, 1] for sigmoid.
-                    riverNoise = (riverNoise * 2f) - 1f;
-                    riverNoise = Sigmoid(riverNoise, genParams.riverSigmoidSlope);
-                }
-
-                float heightAtMaxDepth = WATER_LEVEL - genParams.riverMaxDepth;
-
-                float delta = (groundHeight - heightAtMaxDepth) * riverNoise;
-
-                if (delta > 0)
-                {
-                    groundHeight -= delta;
-                }
+                groundHeight -= delta;
             }
 
-            //
-            // River noise
-            //
-
-            if (genParams.riverNoiseEnabled)
-            {
-                float riverNoiseNoise = PerlinNoise.Get(
-                    x,
-                    z,
-                    seed: "river noise",
-                    baseFrequency: genParams.riverNoiseFrequency,
-                    numberOfOctaves: genParams.riverNoiseOctaves,
-                    lacunarity: genParams.riverNoiseLacunarity,
-                    persistence: genParams.riverNoisePersistence
-                );
-
-                riverNoiseNoise =
-                    (riverNoiseNoise - genParams.riverNoiseNoiseFloor)
-                    / (genParams.riverNoiseNoiseCeiling - genParams.riverNoiseNoiseFloor);
-                riverNoiseNoise = MathF.Max(riverNoiseNoise, 0f);
-                riverNoiseNoise = MathF.Min(riverNoiseNoise, 1f);
-
-                riverNoiseNoise = MathF.Pow(riverNoiseNoise, genParams.riverNoiseExponent);
-
-                if (genParams.riverNoiseSigmoid)
-                {
-                    // Remap into [-1, 1] for sigmoid.
-                    riverNoiseNoise = (riverNoiseNoise * 2f) - 1f;
-                    riverNoiseNoise = Sigmoid(riverNoiseNoise, genParams.riverNoiseSigmoidSlope);
-                }
-
-                groundHeight += riverNoiseNoise * genParams.riverNoiseMultiplier * riverNoise;
-            }
+            // River floor
+            groundHeight += genParams.riverFloor.Get(x, z) * riverNoise;
 
             return groundHeight;
         }
-
-        private static float Sigmoid(float x, float slope) => 1f / (1f + MathF.Exp(-slope * x));
     }
 }

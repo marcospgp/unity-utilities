@@ -20,7 +20,7 @@ namespace UnityUtilities
         /// <param name="baseFrequency">
         ///     The frequency of the first octave.
         /// </param>
-        /// <param name="numberOfOctaves">The number of octaves.</param>
+        /// <param name="octaves">The number of octaves.</param>
         /// <param name="lacunarity">
         ///     Each subsequent octave n will have frequency
         ///     Mathf.Pow(lacunarity, n). A common value for this parameter is
@@ -37,7 +37,7 @@ namespace UnityUtilities
             float z,
             string seed = null,
             float baseFrequency = 0.01f,
-            int numberOfOctaves = 1,
+            int octaves = 1,
             float lacunarity = 2f,
             float persistence = 0.5f
         )
@@ -52,7 +52,7 @@ namespace UnityUtilities
             float amplitude = 1f;
             float totalAmplitude = 0f;
 
-            for (int i = 0; i < numberOfOctaves; i++)
+            for (int i = 0; i < octaves; i++)
             {
                 // Make the seed of each octave different to avoid overlap artifacts.
                 string octaveSeed = FormattableString.Invariant($"{i}{seed}");
@@ -72,7 +72,7 @@ namespace UnityUtilities
             int width,
             string seed = null,
             float baseFrequency = PerlinNoise.DEFAULT_FREQUENCY,
-            int numberOfOctaves = PerlinNoise.DEFAULT_OCTAVE_COUNT,
+            int octaves = PerlinNoise.DEFAULT_OCTAVE_COUNT,
             float lacunarity = PerlinNoise.DEFAULT_LACUNARITY,
             float persistence = PerlinNoise.DEFAULT_PERSISTENCE
         )
@@ -93,7 +93,7 @@ namespace UnityUtilities
                         (float)y,
                         seed,
                         baseFrequency,
-                        numberOfOctaves,
+                        octaves,
                         lacunarity,
                         persistence
                     );

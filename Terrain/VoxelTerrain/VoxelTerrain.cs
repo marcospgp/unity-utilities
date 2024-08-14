@@ -20,8 +20,6 @@ namespace UnityUtilities.Terrain
             (Chunk chunk, GameObject chunkGameObject)
         > chunks = new();
 
-        private readonly GenerationParameters lastGenerationParameters = new();
-
         [SerializeField]
         [Tooltip("Terrain textures, in the same order as they appear in BlockTexture.")]
         private Texture2D[] textures;
@@ -30,7 +28,7 @@ namespace UnityUtilities.Terrain
         private Material baseMaterial;
 
         [SerializeField]
-        private float viewDistance = 1000f;
+        private float viewDistance = 500f;
 
         [SerializeField, LayerSelect]
         private int groundLayer;
@@ -41,8 +39,8 @@ namespace UnityUtilities.Terrain
 
         private Material[] materials;
 
-        private CancellationTokenSource cancelTokenSource = new();
-        private Task task;
+        private Task buildTask;
+        private CancellationTokenSource cancelTokenSource;
 
         public static event EventHandler<Chunk> OnFirstChunk;
 
@@ -55,9 +53,6 @@ namespace UnityUtilities.Terrain
         // Unity event.
         public async void Start()
         {
-            // Cache generation parameters.
-            this.lastGenerationParameters.CopyFrom(this.generationParameters);
-
             // Turn terrain textures into materials.
             this.materials = new Material[this.textures.Length];
 
@@ -69,58 +64,18 @@ namespace UnityUtilities.Terrain
                 };
             }
 
-            this.task = this.BuildTerrain();
-
-            try
-            {
-                await this.task;
-            }
-            catch (OperationCanceledException)
-            {
-                // Suppress.
-            }
+            await this.RegenerateTerrain();
         }
 
 #if UNITY_EDITOR
-        // Unity event.
-        public async void Update()
+        public async void OnValidate()
         {
-            if (!this.generationParameters.IsEqualTo(this.lastGenerationParameters))
+            // Only regenerate terrain when in play mode and when terrain has
+            // already started being generated (this method is also called on
+            // play start when nothing has changed in inspector).
+            if (Application.isPlaying && this.buildTask != null)
             {
-                this.lastGenerationParameters.CopyFrom(this.generationParameters);
-
-                this.cancelTokenSource.Cancel();
-
-                // Wait for terrain to stop generating.
-                try
-                {
-                    await this.task;
-                }
-                catch (OperationCanceledException)
-                {
-                    // Suppress.
-                }
-
-                this.cancelTokenSource.Dispose();
-                this.cancelTokenSource = new CancellationTokenSource();
-
-                foreach ((_, GameObject chunk) in chunks.Values)
-                {
-                    Destroy(chunk);
-                }
-
-                chunks.Clear();
-
-                this.task = this.BuildTerrain();
-
-                try
-                {
-                    await this.task;
-                }
-                catch (OperationCanceledException)
-                {
-                    // Suppress.
-                }
+                await this.RegenerateTerrain();
             }
         }
 #endif
@@ -179,7 +134,7 @@ namespace UnityUtilities.Terrain
             }
         }
 
-        private async Task BuildTerrain()
+        private async Task BuildTerrain(CancellationToken token)
         {
             int viewDistanceInChunks = (int)(
                 this.viewDistance / (CHUNK_WIDTH_IN_BLOCKS * BLOCK_SIZE)
@@ -187,7 +142,7 @@ namespace UnityUtilities.Terrain
 
             foreach ((int x, int z) in Spiral(viewDistanceInChunks))
             {
-                this.cancelTokenSource.Token.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 VoxelTerrain.chunks.Add(
                     (x, z),
@@ -205,6 +160,54 @@ namespace UnityUtilities.Terrain
                 {
                     VoxelTerrain.OnFirstChunk(sender: null, chunks[(0, 0)].chunk);
                 }
+            }
+        }
+
+        // This method cannot await anything because it can be called in quick
+        // succession. It must be atomic.
+        private Task RegenerateTerrain()
+        {
+            // On first terrain generation object will be null.
+            this.cancelTokenSource?.Cancel();
+            this.cancelTokenSource?.Dispose();
+            this.cancelTokenSource = new CancellationTokenSource();
+
+            this.buildTask = this.RegenerateTerrainTask(
+                this.buildTask,
+                this.cancelTokenSource.Token
+            );
+
+            return this.buildTask;
+        }
+
+        private async Task RegenerateTerrainTask(Task previousTask, CancellationToken token)
+        {
+            if (previousTask != null)
+            {
+                try
+                {
+                    await previousTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Suppress.
+                }
+            }
+
+            foreach ((_, GameObject chunk) in chunks.Values)
+            {
+                Destroy(chunk);
+            }
+
+            chunks.Clear();
+
+            try
+            {
+                await this.BuildTerrain(token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Suppress.
             }
         }
     }
