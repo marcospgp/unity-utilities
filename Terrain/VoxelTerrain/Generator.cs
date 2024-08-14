@@ -76,7 +76,7 @@ namespace UnityUtilities.Terrain
             groundHeight +=
                 genParams.mountains.Get(x, z)
                 * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
-                * genParams.mountainFilter.Get(x, z);
+                * (genParams.mountainFilter.enabled ? genParams.mountainFilter.Get(x, z) : 1f);
 
             // Hills
             groundHeight +=
@@ -84,10 +84,8 @@ namespace UnityUtilities.Terrain
 
             // Rivers
             float riverNoise = genParams.rivers.Get(x, z);
-            float maxDepth = genParams.rivers.magnitude;
-            float heightAtMaxDepth = waterLevel - maxDepth;
+            float heightAtMaxDepth = waterLevel - genParams.riverMaxDepth;
             float delta = (groundHeight - heightAtMaxDepth) * riverNoise;
-
             if (delta > 0)
             {
                 groundHeight -= delta;
@@ -95,6 +93,8 @@ namespace UnityUtilities.Terrain
 
             // River floor
             groundHeight += genParams.riverFloor.Get(x, z) * riverNoise;
+
+            Assert.That(groundHeight > 0);
 
             return groundHeight;
         }

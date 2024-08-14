@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
@@ -7,21 +8,31 @@ namespace UnityUtilities.Terrain
     {
         public bool enabled = true;
 
+        [Space]
         public string seed = string.Empty;
         public float baseFrequency = 0.003f;
         public int octaves = 3;
         public float lacunarity = 2f;
         public float persistence = 0.5f;
 
+        [Space]
+        public bool applyAbsolute = false;
+
+        [Space]
         public bool applyStep = false;
         public float stepLow = 0f;
         public float stepHigh = 1f;
 
+        [Space]
         public bool applyExponent = false;
         public float exponent = 1f;
 
+        [Space]
         public bool applySigmoid = false;
         public float sigmoidSlope = 10;
+
+        [Space]
+        public bool applyMagnitude = false;
         public float magnitude = 100f;
 
         public float Get(float x, float z)
@@ -40,6 +51,13 @@ namespace UnityUtilities.Terrain
                 this.lacunarity,
                 this.persistence
             );
+
+            // Applying absolute function creates a "lines" effect in the noise,
+            // useful for things like rivers.
+            if (this.applyAbsolute)
+            {
+                noise = 1f - (MathF.Abs(noise - 0.5f) * 2f);
+            }
 
             if (this.applyStep)
             {
@@ -61,7 +79,7 @@ namespace UnityUtilities.Terrain
                 noise = Sigmoid(noise, this.sigmoidSlope);
             }
 
-            return noise * this.magnitude;
+            return this.applyMagnitude ? noise * this.magnitude : noise;
         }
 
         private static float Sigmoid(float x, float slope) => 1f / (1f + MathF.Exp(-slope * x));
