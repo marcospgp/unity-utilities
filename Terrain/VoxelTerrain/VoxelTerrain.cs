@@ -9,6 +9,7 @@ namespace UnityUtilities.Terrain
     public sealed class VoxelTerrain : MonoBehaviour, IDisposable
     {
         public const float BLOCK_SIZE = 1f;
+
         private const int CHUNK_WIDTH_IN_BLOCKS = 16;
 
         /// <summary>
@@ -19,6 +20,9 @@ namespace UnityUtilities.Terrain
             (int x, int z),
             (Chunk chunk, GameObject chunkGameObject)
         > chunks = new();
+
+        // Ensure singleton.
+        private static VoxelTerrain instance;
 
         [SerializeField]
         [Tooltip("Terrain textures, in the same order as they appear in BlockTexture.")]
@@ -53,6 +57,14 @@ namespace UnityUtilities.Terrain
         // Unity event.
         public async void Start()
         {
+            // Ensure singleton.
+            if (instance != null && this != VoxelTerrain.instance)
+            {
+                throw new Exception("Duplicate instance of singleton component detected.");
+            }
+
+            VoxelTerrain.instance = this;
+
             // Turn terrain textures into materials.
             this.materials = new Material[this.textures.Length];
 
