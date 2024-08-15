@@ -69,14 +69,21 @@ namespace UnityUtilities.Terrain
             // Base terrain (land vs ocean)
             groundHeight += genParams.baseTerrain.Get(x, z);
 
-            float inlandFactor =
-                groundHeight / (genParams.baseHeight + genParams.baseTerrain.magnitude);
+            float inlandFactor = genParams.baseTerrain.GetRaw(x, z);
 
             // Mountains
+
+            float mountainFilter = genParams.mountainFilter.Get(x, z);
+
             groundHeight +=
                 genParams.mountains.Get(x, z)
                 * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
                 * (genParams.mountainFilter.enabled ? genParams.mountainFilter.Get(x, z) : 1f);
+
+            if (genParams.mountainFilter.enabled && genParams.visualizeMountainFilter)
+            {
+                groundHeight += mountainFilter * genParams.mountains.magnitude;
+            }
 
             // Hills
             groundHeight +=

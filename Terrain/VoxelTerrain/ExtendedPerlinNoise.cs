@@ -82,6 +82,20 @@ namespace UnityUtilities.Terrain
             return this.applyMagnitude ? noise * this.magnitude : noise;
         }
 
+        /// <summary>
+        /// Get just the perlin noise value, in [0, 1].
+        /// </summary>
+        public float GetRaw(float x, float z) =>
+            PerlinNoise.Get(
+                x,
+                z,
+                this.seed,
+                this.baseFrequency,
+                this.octaves,
+                this.lacunarity,
+                this.persistence
+            );
+
         private static float Sigmoid(float x, float slope) => 1f / (1f + MathF.Exp(-slope * x));
     }
 }
