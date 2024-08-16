@@ -17,8 +17,6 @@ namespace UnityUtilities.Terrain
             GenerationParameters genParams
         )
         {
-            float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude;
-
             // Account for border.
             int w = chunkWidthInBlocks + 2;
 
@@ -32,26 +30,7 @@ namespace UnityUtilities.Terrain
                     float globalX = ((chunkIndex.x * chunkWidthInBlocks) + x - 1) * blockSize;
                     float globalZ = ((chunkIndex.z * chunkWidthInBlocks) + z - 1) * blockSize;
 
-                    float groundHeight = GetGroundHeight(globalX, globalZ, genParams);
-
-                    int groundHeightInBlocks = (int)(groundHeight / blockSize);
-
-                    var column = new Block[groundHeightInBlocks];
-
-                    Array.Fill(column, value: Block.Dirt);
-
-                    column[^1] = Block.Grass;
-
-                    int waterLevelInBlocks = (int)(MathF.Ceiling(waterLevel) / blockSize) + 1;
-
-                    if (groundHeightInBlocks >= waterLevelInBlocks)
-                    {
-                        column[^1] = Block.Grass;
-                    }
-                    else if (groundHeightInBlocks < waterLevelInBlocks)
-                    {
-                        column[^1] = Block.Sand;
-                    }
+                    Block[] column = GetColumn(globalX, globalZ, blockSize, genParams);
 
                     chunk.SetColumn(x, z, column);
                 }
@@ -60,50 +39,107 @@ namespace UnityUtilities.Terrain
             return chunk;
         }
 
-        private static float GetGroundHeight(float x, float z, GenerationParameters genParams)
+        private static Block[] GetColumn(
+            float x,
+            float z,
+            float blockSize,
+            GenerationParameters genParams
+        )
         {
             float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude;
+            float inlandFactor = genParams.baseTerrain.GetRaw(x, z);
 
             float groundHeight = genParams.baseHeight;
 
-            // Base terrain (land vs ocean)
-            groundHeight += genParams.baseTerrain.Get(x, z);
+            float baseTerrainHeight = genParams.baseTerrain.Get(x, z);
+            groundHeight += baseTerrainHeight;
 
-            float inlandFactor = genParams.baseTerrain.GetRaw(x, z);
+            float mountainHeight = GetMountainHeight(x, z, genParams, inlandFactor);
+            groundHeight += mountainHeight;
 
-            // Mountains
-
-            float mountainFilter = genParams.mountainFilter.Get(x, z);
-
-            groundHeight +=
-                genParams.mountains.Get(x, z)
-                * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
-                * (genParams.mountainFilter.enabled ? genParams.mountainFilter.Get(x, z) : 1f);
-
-            if (genParams.mountainFilter.enabled && genParams.visualizeMountainFilter)
-            {
-                groundHeight += mountainFilter * genParams.mountains.magnitude;
-            }
-
-            // Hills
-            groundHeight +=
+            float hillHeight =
                 genParams.hills.Get(x, z) * MathF.Pow(inlandFactor, genParams.hillInlandExponent);
+            groundHeight += hillHeight;
 
             // Rivers
-            float riverNoise = genParams.rivers.Get(x, z);
-            float heightAtMaxDepth = waterLevel - genParams.riverMaxDepth;
-            float delta = (groundHeight - heightAtMaxDepth) * riverNoise;
-            if (delta > 0)
+            float riverDepth = GetRiverDepth(x, z, genParams, waterLevel, groundHeight);
+            groundHeight -= riverDepth;
+
+            int groundHeightInBlocks = (int)(groundHeight / blockSize);
+
+            // Allocate array now that we know final ground height.
+            var column = new Block[groundHeightInBlocks];
+
+            Array.Fill(column, value: Block.Dirt);
+
+            column[^1] = Block.Grass;
+
+            int waterLevelInBlocks = (int)(MathF.Ceiling(waterLevel) / blockSize);
+
+            if (groundHeightInBlocks >= waterLevelInBlocks)
             {
-                groundHeight -= delta;
+                column[^1] = Block.Grass;
+            }
+            else if (groundHeightInBlocks < waterLevelInBlocks)
+            {
+                column[^1] = Block.Sand;
             }
 
-            // River floor
-            groundHeight += genParams.riverFloor.Get(x, z) * riverNoise;
+            return column;
+        }
 
-            Assert.That(groundHeight > 0);
+        private static float GetMountainHeight(
+            float x,
+            float z,
+            GenerationParameters genParams,
+            float inlandFactor
+        )
+        {
+            float mountainHeight = 0f;
+            float mountainFilter = genParams.mountainFilter.enabled
+                ? genParams.mountainFilter.Get(x, z)
+                : 1f;
 
-            return groundHeight;
+            if (genParams.visualizeMountainFilter)
+            {
+                mountainHeight += mountainFilter * genParams.mountains.magnitude;
+            }
+
+            if (genParams.mountains.enabled)
+            {
+                mountainHeight =
+                    genParams.mountains.Get(x, z)
+                    * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
+                    * mountainFilter;
+            }
+
+            return mountainHeight;
+        }
+
+        private static float GetRiverDepth(
+            float x,
+            float z,
+            GenerationParameters genParams,
+            float waterLevel,
+            float groundHeight
+        )
+        {
+            float riverNoise = genParams.rivers.Get(x, z);
+            float heightAtMaxRiverDepth = waterLevel - genParams.riverMaxDepth;
+            float riverDepth = MathF.Max(0f, (groundHeight - heightAtMaxRiverDepth) * riverNoise);
+            riverDepth = MathF.Min(riverDepth, groundHeight - 1f);
+
+            // Prevent river floor from:
+            //   - being added where a river wasn't carved;
+            //   - reaching river surface.
+            float maxRiverFloorHeight = MathF.Max(0f, riverDepth - 1f);
+
+            float riverFloorHeight = MathF.Min(
+                genParams.riverFloor.Get(x, z) * riverNoise,
+                maxRiverFloorHeight
+            );
+
+            return riverDepth - riverFloorHeight;
         }
     }
 }

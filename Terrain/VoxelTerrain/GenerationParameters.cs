@@ -16,11 +16,13 @@ namespace UnityUtilities.Terrain
 
         public ExtendedPerlinNoise mountainFilter;
 
-        /// <summary>
-        /// Make mountain filter add height to terrain instead of scaling
-        /// mountain height.
-        /// </summary>
+        [Tooltip("Make mountain filter add height to terrain instead of scaling mountain height.")]
         public bool visualizeMountainFilter = false;
+
+        public ExtendedPerlinNoise overhangFilter;
+
+        [Tooltip("Make overhang filter add height to terrain instead of scaling mountain height.")]
+        public bool visualizeOverhangFilter = false;
 
         public ExtendedPerlinNoise hills;
         public float hillInlandExponent = 1f;
@@ -29,5 +31,11 @@ namespace UnityUtilities.Terrain
         public float riverMaxDepth;
 
         public ExtendedPerlinNoise riverFloor;
+
+        [Tooltip("Determines where surface can turn into sand.")]
+        public ExtendedPerlinNoise beaches;
+
+        [Tooltip("Maximum height at which surface can be sand.")]
+        public float maxSandHeight;
     }
 }
