@@ -35,7 +35,7 @@ namespace UnityUtilities.Terrain
         public bool applyMagnitude = false;
         public float magnitude = 100f;
 
-        public float Get(float x, float z)
+        public float Get(float x, float z, string baseSeed)
         {
             if (!this.enabled)
             {
@@ -45,7 +45,7 @@ namespace UnityUtilities.Terrain
             float noise = PerlinNoise.Get(
                 x,
                 z,
-                this.seed,
+                baseSeed + this.seed,
                 this.baseFrequency,
                 this.octaves,
                 this.lacunarity,
@@ -85,11 +85,11 @@ namespace UnityUtilities.Terrain
         /// <summary>
         /// Get just the perlin noise value, in [0, 1].
         /// </summary>
-        public float GetRaw(float x, float z) =>
+        public float GetRaw(float x, float z, string baseSeed) =>
             PerlinNoise.Get(
                 x,
                 z,
-                this.seed,
+                baseSeed + this.seed,
                 this.baseFrequency,
                 this.octaves,
                 this.lacunarity,

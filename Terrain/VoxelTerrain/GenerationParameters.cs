@@ -6,12 +6,17 @@ namespace UnityUtilities.Terrain
     [Serializable]
     public class GenerationParameters
     {
+        public string seed = string.Empty;
+
         [Tooltip("Ocean floor height.")]
         public float baseHeight = 64f;
 
         public float beachInlandThreshold;
 
         public ExtendedPerlinNoise baseTerrain;
+
+        public ExtendedPerlinNoise hills;
+        public float hillInlandExponent = 1f;
 
         public ExtendedPerlinNoise mountains;
         public float mountainInlandExponent = 1f;
@@ -25,9 +30,6 @@ namespace UnityUtilities.Terrain
 
         [Tooltip("Make overhang filter add height to terrain instead of scaling mountain height.")]
         public bool visualizeOverhangFilter = false;
-
-        public ExtendedPerlinNoise hills;
-        public float hillInlandExponent = 1f;
 
         public ExtendedPerlinNoise rivers;
         public float riverMaxDepth;
