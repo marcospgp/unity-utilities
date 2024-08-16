@@ -9,6 +9,8 @@ namespace UnityUtilities.Terrain
         [Tooltip("Ocean floor height.")]
         public float baseHeight = 64f;
 
+        public float beachInlandThreshold;
+
         public ExtendedPerlinNoise baseTerrain;
 
         public ExtendedPerlinNoise mountains;
@@ -31,11 +33,5 @@ namespace UnityUtilities.Terrain
         public float riverMaxDepth;
 
         public ExtendedPerlinNoise riverFloor;
-
-        [Tooltip("Determines where surface can turn into sand.")]
-        public ExtendedPerlinNoise beaches;
-
-        [Tooltip("Maximum height at which surface can be sand.")]
-        public float maxSandHeight;
     }
 }

@@ -46,7 +46,9 @@ namespace UnityUtilities.Terrain
             GenerationParameters genParams
         )
         {
-            float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude;
+            // -1 because we floor ground height when converting to # of blocks.
+            float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude - 1f;
+
             float inlandFactor = genParams.baseTerrain.GetRaw(x, z);
 
             float groundHeight = genParams.baseHeight;
@@ -74,15 +76,18 @@ namespace UnityUtilities.Terrain
 
             column[^1] = Block.Grass;
 
-            int waterLevelInBlocks = (int)(MathF.Ceiling(waterLevel) / blockSize);
+            int waterLevelInBlocks = (int)(waterLevel / blockSize);
 
-            if (groundHeightInBlocks >= waterLevelInBlocks)
-            {
-                column[^1] = Block.Grass;
-            }
-            else if (groundHeightInBlocks < waterLevelInBlocks)
+            if (
+                groundHeightInBlocks <= waterLevelInBlocks
+                && inlandFactor < genParams.beachInlandThreshold
+            )
             {
                 column[^1] = Block.Sand;
+            }
+            else if (groundHeightInBlocks > waterLevelInBlocks)
+            {
+                column[^1] = Block.Grass;
             }
 
             return column;
