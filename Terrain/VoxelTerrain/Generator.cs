@@ -53,127 +53,216 @@ namespace UnityUtilities.Terrain
 
             float groundHeight = genParams.baseHeight;
 
-            float baseTerrainHeight = genParams.baseTerrain.Get(x, z, genParams.seed);
-            groundHeight += baseTerrainHeight;
+            groundHeight += genParams.baseTerrain.Get(x, z, genParams.seed);
 
-            float hillHeight =
-                genParams.hills.Get(x, z, genParams.seed)
-                * MathF.Pow(inlandFactor, genParams.hillInlandExponent);
-            groundHeight += hillHeight;
+            groundHeight += GetHillHeight(x, z, genParams, inlandFactor);
+
+            (float riverStart, float riverEnd) = GetRiverHeight(
+                x,
+                z,
+                genParams,
+                waterLevel,
+                groundHeight
+            );
 
             (float mountainStart, float mountainEnd) = GetMountainHeight(
                 x,
                 z,
                 genParams,
-                inlandFactor
+                inlandFactor,
+                groundHeight
             );
-            int mountainBaseHeightInBlocks = (int)(groundHeight / blockSize);
-            int mountainStartHeightInBlocks = (int)((groundHeight + mountainStart) / blockSize);
-            groundHeight += mountainEnd;
 
-            // Rivers
-            float riverDepth = GetRiverDepth(x, z, genParams, waterLevel, groundHeight);
-            groundHeight -= riverDepth;
+            groundHeight = MathF.Max(waterLevel, mountainEnd);
 
             int groundHeightInBlocks = (int)(groundHeight / blockSize);
 
             // Allocate array now that we know final ground height.
             var column = new Block[groundHeightInBlocks];
 
-            Array.Fill(column, value: Block.Dirt);
+            int riverStartInBlocks = (int)(riverStart / blockSize);
+            int riverEndInBlocks = (int)(riverEnd / blockSize);
+            int waterLevelInBlocks = (int)(waterLevel / blockSize);
 
-            for (int i = mountainBaseHeightInBlocks; i < mountainStartHeightInBlocks; i++)
+            // Place base terrain.
+            for (int i = 0; i < riverStartInBlocks; i++)
             {
-                if (i < column.Length)
+                column[i] = Block.Dirt;
+            }
+
+            // Place river water.
+            for (int i = riverStartInBlocks; i < waterLevelInBlocks; i++)
+            {
+                // TODO: rivers should be water blocks.
+                //
+                // if (i <= waterLevelInBlocks)
+                // {
+                //     column[i] = Block.Water;
+                // }
+
+                column[i] = Block.Air;
+            }
+
+            int mountainStartInBlocks = (int)(mountainStart / blockSize);
+            int mountainEndInBlocks = (int)(mountainEnd / blockSize);
+
+            // Place mountain.
+            for (int i = riverEndInBlocks; i < mountainEndInBlocks; i++)
+            {
+                if (i < mountainStartInBlocks)
                 {
+                    // Place overhang (empty space between ground and mountain
+                    // start).
                     column[i] = Block.Air;
+                }
+                else
+                {
+                    column[i] = Block.Dirt;
                 }
             }
 
-            int waterLevelInBlocks = (int)(waterLevel / blockSize);
+            // TODO: uncomment this when Block.Water introduced?
+            // Assert.That(column[^1] != Block.Air);
 
-            if (
-                groundHeightInBlocks <= waterLevelInBlocks
-                && inlandFactor < genParams.beachInlandThreshold
-            )
+            if (column[^1] == Block.Dirt)
             {
-                column[^1] = Block.Sand;
-            }
-            else if (groundHeightInBlocks >= waterLevelInBlocks)
-            {
-                column[^1] = Block.Grass;
+                if (
+                    groundHeightInBlocks <= waterLevelInBlocks
+                    && inlandFactor < genParams.beachInlandThreshold
+                )
+                {
+                    // Turn beaches to sand.
+                    column[^1] = Block.Sand;
+                }
+                else if (groundHeightInBlocks >= waterLevelInBlocks)
+                {
+                    column[^1] = Block.Grass;
+                }
             }
 
             return column;
         }
 
-        /// <returns>Start and end height, which allows for overhangs.</returns>
-        private static (float start, float end) GetMountainHeight(
+        private static float GetHillHeight(
             float x,
             float z,
             GenerationParameters genParams,
             float inlandFactor
+        ) =>
+            genParams.hills.Get(x, z, genParams.seed)
+            * MathF.Pow(inlandFactor, genParams.hillInlandExponent);
+
+        /// <returns>
+        /// Start and end height, which allows for overhangs.
+        /// </returns>
+        private static (float start, float end) GetMountainHeight(
+            float x,
+            float z,
+            GenerationParameters genParams,
+            float inlandFactor,
+            float groundHeight
         )
         {
             string seed = genParams.seed;
 
-            float mountainStart = genParams.overhangFilter.Get(x, z, seed);
-            float mountainEnd = 0f;
-            float mountainFilter = genParams.mountainFilter.enabled
+            float start = genParams.overhangFilter.Get(x, z, seed);
+            float end = 0f;
+            float filter = genParams.mountainFilter.enabled
                 ? genParams.mountainFilter.Get(x, z, seed)
                 : 1f;
 
             if (genParams.visualizeMountainFilter)
             {
-                mountainEnd += mountainFilter * genParams.mountains.magnitude;
+                end += filter * genParams.mountains.magnitude;
             }
 
             if (genParams.visualizeOverhangFilter)
             {
-                mountainEnd += mountainStart;
-                mountainStart = 0f;
+                end += start;
+                start = 0f;
             }
 
             if (genParams.mountains.enabled)
             {
-                mountainEnd +=
+                end +=
                     genParams.mountains.Get(x, z, seed)
                     * MathF.Pow(inlandFactor, genParams.mountainInlandExponent)
-                    * mountainFilter;
+                    * filter;
             }
 
-            if (mountainStart >= mountainEnd)
+            if (start >= end)
             {
-                return (0f, 0f);
+                start = 0f;
+                end = 0f;
             }
 
-            return (mountainStart, mountainEnd);
+            float span = end - start;
+
+            bool isOverhang = start > 0.01f;
+
+            // Enforce minimum overhang span.
+            if (isOverhang && span < 3f)
+            {
+                // Remove overhang entirely.
+                start = 0f;
+                end = 0f;
+            }
+
+            // Enforce minimum overhang height.
+            if (start < 2f)
+            {
+                // Fill overhang to ground level.
+                start = 0f;
+            }
+
+            return (groundHeight + start, groundHeight + end);
         }
 
-        private static float GetRiverDepth(
+        /// <returns>
+        /// Start and end height, allowing for things like rivers flowing into
+        /// mountains and under overhangs.
+        /// </returns>
+        private static (float start, float end) GetRiverHeight(
             float x,
             float z,
             GenerationParameters genParams,
             float waterLevel,
-            float groundHeight
+            float surfaceHeight
         )
         {
             float riverNoise = genParams.rivers.Get(x, z, genParams.seed);
+
             float heightAtMaxRiverDepth = waterLevel - genParams.riverMaxDepth;
-            float riverDepth = MathF.Max(0f, (groundHeight - heightAtMaxRiverDepth) * riverNoise);
-            riverDepth = MathF.Min(riverDepth, groundHeight - 1f);
+
+            // Prevent negative delta when terrain is already below max river
+            // depth.
+            float maxDepth = MathF.Max(0f, surfaceHeight - heightAtMaxRiverDepth);
+
+            float depth = MathF.Max(0f, maxDepth * riverNoise);
+
+            // Prevent river from reaching bottom of chunk.
+            // Should only happen by mistake while designing terrain, but better
+            // to prevent errors.
+            depth = MathF.Min(depth, surfaceHeight - 1f);
 
             // Prevent river floor from:
             //   - being added where a river wasn't carved;
             //   - reaching river surface.
-            float maxRiverFloorHeight = MathF.Max(0f, riverDepth - 1f);
+            float maxRiverFloorHeight = MathF.Max(0f, depth - 1f);
 
             float riverFloorHeight = MathF.Min(
                 genParams.riverFloor.Get(x, z, genParams.seed) * riverNoise,
                 maxRiverFloorHeight
             );
 
-            return riverDepth - riverFloorHeight;
+            depth -= riverFloorHeight;
+
+            float riverStart = surfaceHeight - depth;
+
+            // TODO: improve.
+            float riverEnd = surfaceHeight + depth;
+
+            return (riverStart, riverEnd);
         }
     }
 }

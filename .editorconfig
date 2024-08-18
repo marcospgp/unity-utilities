@@ -166,6 +166,8 @@ dotnet_diagnostic.CA2201.severity = none
 dotnet_diagnostic.MA0004.severity = none
 # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0016.severity = none
+# MA0026 - Fix TODO comment
+dotnet_diagnostic.MA0026.severity = none
 # MA0046: The second parameter must be of type 'System.EventArgs' or a derived type
 dotnet_diagnostic.MA0046.severity = none
 # MA0048: File name must match type name
@@ -242,6 +244,8 @@ dotnet_diagnostic.S101.severity = none
 # Sections of code should not be commented out
 # https://rules.sonarsource.com/csharp/RSPEC-125/
 dotnet_diagnostic.S125.severity = none
+# S1135: Complete the task associated to this 'TODO' comment.
+dotnet_diagnostic.S1135.severity = none
 # S1244: Do not check floating point inequality with exact values, use a range instead.
 # Not always correct.
 dotnet_diagnostic.S1244.severity = none
