@@ -27,20 +27,20 @@ namespace UnityUtilities.Terrain
         /// 1. [all sides] (same texture for all faces)
         /// 2. [top, bottom, sides]
         /// </summary>
-        private static readonly Dictionary<Block, BlockTexture[]> textureMap =
+        private static readonly Dictionary<Block, BlockMaterial[]> materialMap =
             new()
             {
-                { Block.Dirt, new[] { BlockTexture.Dirt } },
+                { Block.Dirt, new[] { BlockMaterial.Dirt } },
                 {
                     Block.Grass,
-                    new[] { BlockTexture.GrassTop, BlockTexture.Dirt, BlockTexture.GrassSide }
+                    new[] { BlockMaterial.GrassTop, BlockMaterial.Dirt, BlockMaterial.GrassSide }
                 },
-                { Block.Sand, new[] { BlockTexture.Sand } },
+                { Block.Sand, new[] { BlockMaterial.Sand } },
             };
 
-        public static BlockTexture GetTexture(this Block block, Face face)
+        public static BlockMaterial GetMaterial(this Block block, Face face)
         {
-            BlockTexture[] map = textureMap[block];
+            BlockMaterial[] map = materialMap[block];
 
             if (map.Length == 1)
             {

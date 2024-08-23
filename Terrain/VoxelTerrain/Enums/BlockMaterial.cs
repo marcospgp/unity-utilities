@@ -1,6 +1,6 @@
 namespace UnityUtilities.Terrain
 {
-    public enum BlockTexture
+    public enum BlockMaterial
     {
         Dirt,
         GrassTop,

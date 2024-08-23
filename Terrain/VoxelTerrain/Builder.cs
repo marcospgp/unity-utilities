@@ -173,7 +173,7 @@ namespace UnityUtilities.Terrain
             // //     avoid the first submesh always being empty.
             //     int submesh = (byte)block - 1;
 
-            int submesh = (int)block.GetTexture(face);
+            int submesh = (int)block.GetMaterial(face);
 
             mesh.AddSquare(v0, v1, v2, v3, submesh);
 

@@ -25,11 +25,8 @@ namespace UnityUtilities.Terrain
         private static VoxelTerrain instance;
 
         [SerializeField]
-        [Tooltip("Terrain textures, in the same order as they appear in BlockTexture.")]
-        private Texture2D[] textures;
-
-        [SerializeField]
-        private Material baseMaterial;
+        [Tooltip("Terrain materials, in the same order as they appear in BlockTexture.")]
+        private Material[] materials;
 
         [SerializeField]
         private float viewDistance = 500f;
@@ -40,8 +37,6 @@ namespace UnityUtilities.Terrain
         [Header("Terrain generation parameters")]
         [SerializeField]
         private GenerationParameters generationParameters = new();
-
-        private Material[] materials;
 
         private Task buildTask;
         private CancellationTokenSource cancelTokenSource;
@@ -64,17 +59,6 @@ namespace UnityUtilities.Terrain
             }
 
             VoxelTerrain.instance = this;
-
-            // Turn terrain textures into materials.
-            this.materials = new Material[this.textures.Length];
-
-            for (int i = 0; i < this.textures.Length; i++)
-            {
-                this.materials[i] = new Material(this.baseMaterial)
-                {
-                    mainTexture = this.textures[i],
-                };
-            }
 
             await this.RegenerateTerrain();
         }
