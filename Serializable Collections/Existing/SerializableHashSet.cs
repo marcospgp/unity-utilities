@@ -12,7 +12,7 @@ namespace UnityUtilities
     [Serializable]
     public class SerializableHashSet<T> : ISerializationCallbackReceiver, IEnumerable<T>
     {
-        private readonly HashSet<T> hashSet = new HashSet<T>();
+        private readonly HashSet<T> hashSet = new();
 
         [SerializeField]
         private List<T> serializableItems;

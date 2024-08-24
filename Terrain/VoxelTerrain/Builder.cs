@@ -1,34 +1,23 @@
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnityUtilities.Terrain
 {
     public static class Builder
     {
-        public static async Task<(Chunk, GameObject)> BuildChunk(
+        public static GameObject BuildChunkGameObject(
             (int x, int z) chunkIndex,
+            Chunk chunk,
             int chunkWidthInBlocks,
             float blockSize,
-            Material[] materials,
-            int groundLayer,
-            GenerationParameters generationParameters
+            Dictionary<Block, BlockMaterials> materialsByBlockType,
+            int groundLayer
         )
         {
             string name = FormattableString.Invariant($"Chunk_x{chunkIndex.x}_z{chunkIndex.z}");
 
-            (Chunk chunk, Mesh mesh) = await SafeTask.Run(() =>
-            {
-                Chunk c = Generator.GenerateChunkWithBorder(
-                    chunkIndex,
-                    chunkWidthInBlocks,
-                    blockSize,
-                    generationParameters
-                );
-                Mesh m = BuildChunkMesh(c, blockSize);
-
-                return (c, m);
-            });
+            Mesh mesh = BuildChunkMesh(chunk, blockSize, materialsByBlockType);
 
             UnityEngine.Mesh unityMesh = mesh.ToUnityMesh(name);
 
@@ -49,16 +38,23 @@ namespace UnityUtilities.Terrain
             meshFilter.sharedMesh = unityMesh;
 
             MeshRenderer meshRenderer = chunkGO.AddComponent<MeshRenderer>();
-            meshRenderer.sharedMaterials = materials;
+
+            meshRenderer.sharedMaterials = mesh.materials.ToArray();
 
             _ = chunkGO.AddComponent<MeshCollider>();
 
-            return (chunk, chunkGO);
+            return chunkGO;
         }
 
-        private static Mesh BuildChunkMesh(Chunk chunk, float blockSize)
+        private static Mesh BuildChunkMesh(
+            Chunk chunk,
+            float blockSize,
+            Dictionary<Block, BlockMaterials> materialsByBlockType
+        )
         {
-            var mesh = new Mesh();
+            Mesh mesh = new();
+
+            Dictionary<Block, byte> submeshByBlock = new();
 
             foreach ((int x, int y, int z, Block block) in chunk.EnumerateWithoutBorder())
             {
@@ -67,120 +63,121 @@ namespace UnityUtilities.Terrain
                     continue;
                 }
 
+                if (!submeshByBlock.TryGetValue(block, out byte blockSubmeshIndex))
+                {
+                    int count = mesh.submeshes.Count;
+                    submeshByBlock.Add(block, (byte)count);
+                    blockSubmeshIndex = (byte)count;
+                }
+
+                BlockMaterials blockMaterials = materialsByBlockType[block];
+
                 // Subtract 1 to compensate 1-unit border.
-                var pos = new Vector3(x - 1, y, z - 1);
+                var offset = new Vector3Int(x - 1, y, z - 1);
 
-                if (chunk[x + 1, y, z] == Block.Air)
-                {
-                    AddFace(mesh, Face.XPlus, pos, blockSize, block);
-                }
-
-                if (chunk[x - 1, y, z] == Block.Air)
-                {
-                    AddFace(mesh, Face.XMinus, pos, blockSize, block);
-                }
-
-                if (chunk[x, y + 1, z] == Block.Air)
-                {
-                    AddFace(mesh, Face.YPlus, pos, blockSize, block);
-                }
-
-                if (y > 0 && chunk[x, y - 1, z] == Block.Air)
-                {
-                    AddFace(mesh, Face.YMinus, pos, blockSize, block);
-                }
-
-                if (chunk[x, y, z + 1] == Block.Air)
-                {
-                    AddFace(mesh, Face.ZPlus, pos, blockSize, block);
-                }
-
-                if (chunk[x, y, z - 1] == Block.Air)
-                {
-                    AddFace(mesh, Face.ZMinus, pos, blockSize, block);
-                }
+                BuildBlock(chunk, mesh, offset, blockSize, blockSubmeshIndex, blockMaterials);
             }
 
             return mesh;
         }
 
-        private static void AddFace(
+        private static void BuildBlock(
+            Chunk chunk,
             Mesh mesh,
-            Face face,
-            Vector3 offset,
+            Vector3Int offset,
             float blockSize,
-            Block block
+            byte blockSubmeshIndex,
+            BlockMaterials blockMaterials
         )
         {
-            Vector3 v0 = offset;
-            Vector3 v1 = offset;
-            Vector3 v2 = offset;
-            Vector3 v3 = offset;
+            void AddFace(Vector3 a, Vector3 b, Vector3 c, Vector3 d, byte submesh)
+            {
+                mesh.AddSquare(
+                    (a + offset) * blockSize,
+                    (b + offset) * blockSize,
+                    (c + offset) * blockSize,
+                    (d + offset) * blockSize,
+                    submesh
+                );
 
-            if (face == Face.XPlus)
-            {
-                v0 += new Vector3(1, 0, 0);
-                v1 += new Vector3(1, 1, 0);
-                v2 += new Vector3(1, 1, 1);
-                v3 += new Vector3(1, 0, 1);
-            }
-            else if (face == Face.XMinus)
-            {
-                v0 += new Vector3(0, 0, 1);
-                v1 += new Vector3(0, 1, 1);
-                v2 += new Vector3(0, 1, 0);
-                v3 += new Vector3(0, 0, 0);
-            }
-            else if (face == Face.YPlus)
-            {
-                v0 += new Vector3(0, 1, 0);
-                v1 += new Vector3(0, 1, 1);
-                v2 += new Vector3(1, 1, 1);
-                v3 += new Vector3(1, 1, 0);
-            }
-            else if (face == Face.YMinus)
-            {
-                v0 += new Vector3(0, 0, 1);
-                v1 += new Vector3(0, 0, 0);
-                v2 += new Vector3(1, 0, 0);
-                v3 += new Vector3(1, 0, 1);
-            }
-            else if (face == Face.ZPlus)
-            {
-                v0 += new Vector3(1, 0, 1);
-                v1 += new Vector3(1, 1, 1);
-                v2 += new Vector3(0, 1, 1);
-                v3 += new Vector3(0, 0, 1);
-            }
-            else if (face == Face.ZMinus)
-            {
-                v0 += new Vector3(0, 0, 0);
-                v1 += new Vector3(0, 1, 0);
-                v2 += new Vector3(1, 1, 0);
-                v3 += new Vector3(1, 0, 0);
-            }
-            else
-            {
-                throw new Exception("Unexpected block face.");
+                mesh.uvs.Add(new Vector2(0, 0));
+                mesh.uvs.Add(new Vector2(0, 1));
+                mesh.uvs.Add(new Vector2(1, 1));
+                mesh.uvs.Add(new Vector2(1, 0));
             }
 
-            v0 *= blockSize;
-            v1 *= blockSize;
-            v2 *= blockSize;
-            v3 *= blockSize;
+            byte GetSubmesh(Face face) =>
+                (byte)(blockSubmeshIndex + blockMaterials.GetMaterialIndex(face));
 
-            // // Because Block.Air is 0, we decrement submesh index by 1 to
-            // //     avoid the first submesh always being empty.
-            //     int submesh = (byte)block - 1;
+            int x = offset.x;
+            int y = offset.y;
+            int z = offset.z;
 
-            int submesh = (int)block.GetMaterial(face);
+            if (chunk[x + 1, y, z] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(1, 0, 0),
+                    new Vector3(1, 1, 0),
+                    new Vector3(1, 1, 1),
+                    new Vector3(1, 0, 1),
+                    GetSubmesh(Face.XPlus)
+                );
+            }
 
-            mesh.AddSquare(v0, v1, v2, v3, submesh);
+            if (chunk[x - 1, y, z] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(0, 0, 1),
+                    new Vector3(0, 1, 1),
+                    new Vector3(0, 1, 0),
+                    new Vector3(0, 0, 0),
+                    GetSubmesh(Face.XMinus)
+                );
+            }
 
-            mesh.uvs.Add(new Vector2(0, 0));
-            mesh.uvs.Add(new Vector2(0, 1));
-            mesh.uvs.Add(new Vector2(1, 1));
-            mesh.uvs.Add(new Vector2(1, 0));
+            if (chunk[x, y + 1, z] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(0, 1, 0),
+                    new Vector3(0, 1, 1),
+                    new Vector3(1, 1, 1),
+                    new Vector3(1, 1, 0),
+                    GetSubmesh(Face.YPlus)
+                );
+            }
+
+            if (y > 0 && chunk[x, y - 1, z] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(0, 0, 1),
+                    new Vector3(0, 0, 0),
+                    new Vector3(1, 0, 0),
+                    new Vector3(1, 0, 1),
+                    GetSubmesh(Face.YMinus)
+                );
+            }
+
+            if (chunk[x, y, z + 1] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(1, 0, 1),
+                    new Vector3(1, 1, 1),
+                    new Vector3(0, 1, 1),
+                    new Vector3(0, 0, 1),
+                    GetSubmesh(Face.ZPlus)
+                );
+            }
+
+            if (chunk[x, y, z - 1] == Block.Air)
+            {
+                AddFace(
+                    new Vector3(0, 0, 0),
+                    new Vector3(0, 1, 0),
+                    new Vector3(1, 1, 0),
+                    new Vector3(1, 0, 0),
+                    GetSubmesh(Face.ZMinus)
+                );
+            }
         }
     }
 }

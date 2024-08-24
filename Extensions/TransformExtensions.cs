@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UnityUtilities
 {
-    public static class FindRecursiveExtension
+    public static class TransformExtensions
     {
         /// <summary>
         /// Recursive Transform.Find(). Like Transform.Find(), but searches

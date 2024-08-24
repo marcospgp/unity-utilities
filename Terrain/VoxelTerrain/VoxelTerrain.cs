@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -25,8 +26,7 @@ namespace UnityUtilities.Terrain
         private static VoxelTerrain instance;
 
         [SerializeField]
-        [Tooltip("Terrain materials, in the same order as they appear in BlockTexture.")]
-        private Material[] materials;
+        private List<BlockMaterials> blockMaterials;
 
         [SerializeField]
         private float viewDistance = 500f;
@@ -40,6 +40,8 @@ namespace UnityUtilities.Terrain
 
         private Task buildTask;
         private CancellationTokenSource cancelTokenSource;
+
+        private Dictionary<Block, BlockMaterials> materialsByBlockType;
 
         public static event EventHandler<Chunk> OnFirstChunk;
 
@@ -60,6 +62,9 @@ namespace UnityUtilities.Terrain
 
             VoxelTerrain.instance = this;
 
+            // Build dictionary of materials by block type.
+            this.materialsByBlockType = BuildBlockMaterialsDictionary(this.blockMaterials);
+
             await this.RegenerateTerrain();
         }
 
@@ -75,6 +80,34 @@ namespace UnityUtilities.Terrain
             }
         }
 #endif
+
+        private static Dictionary<Block, BlockMaterials> BuildBlockMaterialsDictionary(
+            List<BlockMaterials> blockMaterials
+        )
+        {
+            var blockEnumValues = (Block[])Enum.GetValues(typeof(Block));
+
+            // Get block types excluding air.
+            Block[] blockTypes = blockEnumValues.Skip(1).ToArray();
+
+            Dictionary<Block, BlockMaterials> materialsByBlockType = new();
+
+            if (blockMaterials.Count != blockTypes.Length)
+            {
+                throw new Exception(
+                    "Number of blockMaterials entries must match number of "
+                        + " block types in Block enum (and be in the same "
+                        + "order)."
+                );
+            }
+
+            for (int i = 0; i < blockTypes.Length; i++)
+            {
+                materialsByBlockType.Add(blockTypes[i], blockMaterials[i]);
+            }
+
+            return materialsByBlockType;
+        }
 
         // Enumerates coordinates for a spiral.
         private static IEnumerable<(int, int)> Spiral(int radius)
@@ -140,17 +173,28 @@ namespace UnityUtilities.Terrain
             {
                 token.ThrowIfCancellationRequested();
 
-                VoxelTerrain.chunks.Add(
-                    (x, z),
-                    await Builder.BuildChunk(
+                (Chunk chunk, GameObject chunkGameObject) = await SafeTask.Run(() =>
+                {
+                    Chunk c = Generator.GenerateChunkWithBorder(
                         (x, z),
                         CHUNK_WIDTH_IN_BLOCKS,
                         BLOCK_SIZE,
-                        this.materials,
-                        this.groundLayer,
                         this.generationParameters
-                    )
-                );
+                    );
+
+                    GameObject o = Builder.BuildChunkGameObject(
+                        (x, z),
+                        c,
+                        CHUNK_WIDTH_IN_BLOCKS,
+                        BLOCK_SIZE,
+                        this.materialsByBlockType,
+                        this.groundLayer
+                    );
+
+                    return (c, o);
+                });
+
+                VoxelTerrain.chunks.Add((x, z), (chunk, chunkGameObject));
 
                 if (x == 0 && z == 0)
                 {

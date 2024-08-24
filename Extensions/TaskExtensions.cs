@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace UnityUtilities
 {
-    public static class TaskAsCoroutineExtension
+    public static class TaskExtensions
     {
         public static IEnumerator AsCoroutine(this Task task)
         {

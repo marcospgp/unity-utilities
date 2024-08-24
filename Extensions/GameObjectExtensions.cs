@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace UnityUtilities
 {
-    public static class StrictGetComponentExtensions
+    public static class GameObjectExtensions
     {
         /// <summary>
         /// Strict version of GetComponentStrict that errors when the component

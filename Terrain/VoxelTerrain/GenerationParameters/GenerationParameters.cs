@@ -11,6 +11,9 @@ namespace UnityUtilities.Terrain
         [Tooltip("Ocean floor height.")]
         public float baseHeight = 64f;
 
+        public float inlandStepLow = 0f;
+        public float inlandStepHigh = 1f;
+
         public float beachInlandThreshold;
 
         public ExtendedPerlinNoise baseTerrain;

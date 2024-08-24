@@ -19,6 +19,7 @@ namespace UnityUtilities.Terrain
         public bool applyAbsolute = false;
 
         [Space]
+        [Tooltip("Clamp values to a given range and map back to [0, 1].")]
         public bool applyStep = false;
         public float stepLow = 0f;
         public float stepHigh = 1f;
@@ -34,6 +35,21 @@ namespace UnityUtilities.Terrain
         [Space]
         public bool applyMagnitude = false;
         public float magnitude = 100f;
+
+        [Space]
+        [Tooltip("Increase result by a given constant when it is higher than a given threshold.")]
+        public bool applyBias = false;
+        public float bias = 0f;
+        public float biasThreshold = 0.01f;
+
+        public static float Step(float x, float low, float high)
+        {
+            x = (x - low) / (high - low);
+            x = MathF.Max(x, 0f);
+            x = MathF.Min(x, 1f);
+
+            return x;
+        }
 
         public float Get(float x, float z, string baseSeed)
         {
@@ -61,9 +77,7 @@ namespace UnityUtilities.Terrain
 
             if (this.applyStep)
             {
-                noise = (noise - this.stepLow) / (this.stepHigh - this.stepLow);
-                noise = MathF.Max(noise, 0f);
-                noise = MathF.Min(noise, 1f);
+                noise = Step(noise, this.stepLow, this.stepHigh);
             }
 
             if (this.applyExponent)
@@ -79,7 +93,19 @@ namespace UnityUtilities.Terrain
                 noise = Sigmoid(noise, this.sigmoidSlope);
             }
 
-            return this.applyMagnitude ? noise * this.magnitude : noise;
+            float result = noise;
+
+            if (this.applyMagnitude)
+            {
+                result *= this.magnitude;
+            }
+
+            if (this.applyBias && result >= this.biasThreshold)
+            {
+                result += this.bias;
+            }
+
+            return result;
         }
 
         /// <summary>

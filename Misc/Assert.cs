@@ -14,5 +14,10 @@ namespace UnityUtilities
                 throw new Exception("Assertion failed.");
             }
         }
+
+        public static void Never()
+        {
+            throw new Exception("Assertion failed.");
+        }
     }
 }

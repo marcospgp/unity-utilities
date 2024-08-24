@@ -9,8 +9,10 @@ namespace UnityUtilities.Terrain
         public readonly List<Vector3> vs = new();
         public readonly List<Vector2> uvs = new();
 
-        // Triangles are divided per submesh.
+        // Triangles are organized per submesh.
         public readonly Dictionary<int, List<int>> submeshes = new();
+
+        public readonly List<Material> materials = new();
 
         public void AddSquare(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, int submesh)
         {

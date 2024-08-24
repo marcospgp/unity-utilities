@@ -14,7 +14,7 @@ namespace UnityUtilities
         : ISerializationCallbackReceiver,
             IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        private readonly Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
+        private readonly Dictionary<TKey, TValue> dictionary = new();
 
         [SerializeField]
         private List<TKey> serializableKeys;

@@ -164,6 +164,8 @@ dotnet_diagnostic.CA2201.severity = none
 
 # MA0004: Use Task.ConfigureAwait
 dotnet_diagnostic.MA0004.severity = none
+# MA0006 - Use String.Equals instead of equality operator
+dotnet_diagnostic.MA0006.severity = none
 # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0016.severity = none
 # MA0026 - Fix TODO comment
@@ -194,7 +196,8 @@ dotnet_diagnostic.MA0084.severity = none
 # "dotnet_diagnostic.RCSxxxx.severity".
 
 # Set severity for all roslynator analyzers that are enabled by default
-# dotnet_analyzer_diagnostic.category-roslynator.severity = warning
+# https://josefpihrt.github.io/docs/roslynator/configuration
+dotnet_analyzer_diagnostic.category-roslynator.severity = warning
 
 # RCS1042: Remove enum default underlying type.
 dotnet_diagnostic.RCS1042.severity = none

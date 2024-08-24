@@ -12,20 +12,14 @@ namespace UnityUtilities
     [Serializable]
     public class SerializableSortedSet<T> : ISerializationCallbackReceiver, IEnumerable<T>
     {
-        private readonly SortedSet<T> sortedSet = new SortedSet<T>();
+        private readonly SortedSet<T> sortedSet;
 
         [SerializeField]
         private List<T> serializableItems;
 
-        public SerializableSortedSet()
-        {
-            this.sortedSet = new SortedSet<T>();
-        }
+        public SerializableSortedSet() => this.sortedSet = new();
 
-        public SerializableSortedSet(IComparer<T> comparer)
-        {
-            this.sortedSet = new SortedSet<T>(comparer);
-        }
+        public SerializableSortedSet(IComparer<T> comparer) => this.sortedSet = new(comparer);
 
         public int Count => this.sortedSet.Count;
         public T Min => this.sortedSet.Min;

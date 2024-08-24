@@ -50,6 +50,11 @@ namespace UnityUtilities.Terrain
             float waterLevel = genParams.baseHeight + genParams.baseTerrain.magnitude - 1f;
 
             float inlandFactor = genParams.baseTerrain.GetRaw(x, z, genParams.seed);
+            inlandFactor = ExtendedPerlinNoise.Step(
+                inlandFactor,
+                genParams.inlandStepLow,
+                genParams.inlandStepHigh
+            );
 
             float groundHeight = genParams.baseHeight;
 

@@ -3,8 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using UnityEditor;
 using UnityEngine;
 
-// Allow selecting a tag through the inspector by declaring a string field with
-// [SerializeField] and [TagSelect] attributes.
+// Allow selecting a tag through the inspector with the [TagSelect] attribute.
 // Based on http://www.brechtos.com/tagselectorattribute/
 
 namespace UnityUtilities
@@ -20,8 +19,8 @@ namespace UnityUtilities
 
     // This class must only be included in the editor, or the compiler will throw an
     // error.
-    [CustomPropertyDrawer(typeof(TagSelectAttribute))]
     [SuppressMessage("", "SA1402:FileMayOnlyContainASingleType")]
+    [CustomPropertyDrawer(typeof(TagSelectAttribute))]
     public class TagSelectPropertyDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
