@@ -72,19 +72,16 @@ namespace UnityUtilities.Terrain
 
                 BlockMaterials blockMaterials = materialsByBlockType[block];
 
-                // Subtract 1 to compensate 1-unit border.
-                var offset = new Vector3Int(x - 1, y, z - 1);
-
-                BuildBlock(chunk, mesh, offset, blockSize, blockSubmeshIndex, blockMaterials);
+                BuildBlock((x, y, z), chunk, mesh, blockSize, blockSubmeshIndex, blockMaterials);
             }
 
             return mesh;
         }
 
         private static void BuildBlock(
+            (int x, int y, int z) pos,
             Chunk chunk,
             Mesh mesh,
-            Vector3Int offset,
             float blockSize,
             byte blockSubmeshIndex,
             BlockMaterials blockMaterials
@@ -92,6 +89,9 @@ namespace UnityUtilities.Terrain
         {
             void AddFace(Vector3 a, Vector3 b, Vector3 c, Vector3 d, byte submesh)
             {
+                // Subtract 1 to compensate 1-unit border.
+                var offset = new Vector3Int(pos.x - 1, pos.y, pos.z - 1);
+
                 mesh.AddSquare(
                     (a + offset) * blockSize,
                     (b + offset) * blockSize,
@@ -109,9 +109,9 @@ namespace UnityUtilities.Terrain
             byte GetSubmesh(Face face) =>
                 (byte)(blockSubmeshIndex + blockMaterials.GetMaterialIndex(face));
 
-            int x = offset.x;
-            int y = offset.y;
-            int z = offset.z;
+            int x = pos.x;
+            int y = pos.y;
+            int z = pos.z;
 
             if (chunk[x + 1, y, z] == Block.Air)
             {
