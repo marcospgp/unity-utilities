@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 namespace UnityUtilities.Terrain
 {
@@ -10,34 +11,35 @@ namespace UnityUtilities.Terrain
         /// to draw each face.
         /// </summary>
         ///
-        public static Chunk GenerateChunkWithBorder(
+        public static Task<Chunk> GenerateChunkWithBorder(
             (int x, int z) chunkIndex,
             int chunkWidthInBlocks,
             float blockSize,
             GenerationParameters genParams
-        )
-        {
-            // Account for border.
-            int w = chunkWidthInBlocks + 2;
-
-            var chunk = new Chunk(w);
-
-            for (int x = 0; x < w; x++)
+        ) =>
+            SafeTask.Run(() =>
             {
-                for (int z = 0; z < w; z++)
+                // Account for border.
+                int w = chunkWidthInBlocks + 2;
+
+                var chunk = new Chunk(w);
+
+                for (int x = 0; x < w; x++)
                 {
-                    // -1 to account for border.
-                    float globalX = ((chunkIndex.x * chunkWidthInBlocks) + x - 1) * blockSize;
-                    float globalZ = ((chunkIndex.z * chunkWidthInBlocks) + z - 1) * blockSize;
+                    for (int z = 0; z < w; z++)
+                    {
+                        // -1 to account for border.
+                        float globalX = ((chunkIndex.x * chunkWidthInBlocks) + x - 1) * blockSize;
+                        float globalZ = ((chunkIndex.z * chunkWidthInBlocks) + z - 1) * blockSize;
 
-                    Block[] column = GetColumn(globalX, globalZ, blockSize, genParams);
+                        Block[] column = GetColumn(globalX, globalZ, blockSize, genParams);
 
-                    chunk.SetColumn(x, z, column);
+                        chunk.SetColumn(x, z, column);
+                    }
                 }
-            }
 
-            return chunk;
-        }
+                return chunk;
+            });
 
         private static Block[] GetColumn(
             float x,

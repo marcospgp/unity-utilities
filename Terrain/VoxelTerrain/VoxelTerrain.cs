@@ -173,28 +173,28 @@ namespace UnityUtilities.Terrain
             {
                 token.ThrowIfCancellationRequested();
 
-                (Chunk chunk, GameObject chunkGameObject) = await SafeTask.Run(() =>
-                {
-                    Chunk c = Generator.GenerateChunkWithBorder(
-                        (x, z),
-                        CHUNK_WIDTH_IN_BLOCKS,
-                        BLOCK_SIZE,
-                        this.generationParameters
-                    );
+                Chunk chunk = await Generator.GenerateChunkWithBorder(
+                    (x, z),
+                    CHUNK_WIDTH_IN_BLOCKS,
+                    BLOCK_SIZE,
+                    this.generationParameters
+                );
 
-                    GameObject o = Builder.BuildChunkGameObject(
-                        (x, z),
-                        c,
-                        CHUNK_WIDTH_IN_BLOCKS,
-                        BLOCK_SIZE,
-                        this.materialsByBlockType,
-                        this.groundLayer
-                    );
+                ChunkMesh mesh = await SafeTask.Run(
+                    () => new ChunkMesh(chunk, BLOCK_SIZE, this.materialsByBlockType)
+                );
 
-                    return (c, o);
-                });
+                string name = FormattableString.Invariant($"Chunk_x{x}_z{z}");
 
-                VoxelTerrain.chunks.Add((x, z), (chunk, chunkGameObject));
+                GameObject chunkGO = mesh.ToGameObject(
+                    name,
+                    (x, z),
+                    CHUNK_WIDTH_IN_BLOCKS,
+                    BLOCK_SIZE,
+                    this.groundLayer
+                );
+
+                VoxelTerrain.chunks.Add((x, z), (chunk, chunkGO));
 
                 if (x == 0 && z == 0)
                 {

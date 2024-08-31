@@ -6,11 +6,10 @@ namespace UnityUtilities.Terrain
     [Serializable]
     public struct BlockMaterials
     {
-        [SerializeField]
-        private Configuration configuration;
+        public Material[] materials;
 
         [SerializeField]
-        private Material[] materials;
+        private Configuration configuration;
 
         public BlockMaterials(Material allSides)
         {

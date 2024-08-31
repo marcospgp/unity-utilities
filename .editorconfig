@@ -119,6 +119,9 @@ dotnet_diagnostic.IDE0002.severity = none
 # IDE0004: Remove unnecessary cast
 # We want to be explicit about conversions.
 dotnet_diagnostic.IDE0004.severity = none
+# 'var' preferences (IDE0007 and IDE0008)
+dotnet_diagnostic.IDE0007.severity = none
+dotnet_diagnostic.IDE0008.severity = none
 # IDE0045: Use conditional expression for assignment
 # We don't want to be forced to use ternary operator for assignments.
 dotnet_diagnostic.IDE0045.severity = none
